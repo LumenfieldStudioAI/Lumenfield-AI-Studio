@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 
 function TurkishEmblem({ size = 32 }: { size?: number }) {
@@ -194,16 +195,16 @@ export default function PricingPage() {
 
       {/* NAV */}
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 32px", borderBottom: "1px solid #14141f", background: "rgba(7,7,15,0.97)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 100 }}>
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg,#e8006f,#9c004a)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 17, color: "#fff" }}>L</div>
           <span style={{ fontWeight: 800, fontSize: 15, color: "#fff", letterSpacing: -0.4 }}>Lumenfield <span style={{ color: "#e8006f" }}>AI</span> Studio</span>
-        </a>
+        </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <a href="/pricing" style={{ background: "linear-gradient(135deg,#e8006f,#9c004a)", borderRadius: 7, padding: "7px 14px", fontSize: 12, color: "#fff", fontWeight: 700, textDecoration: "none" }}>
+          <Link href="/pricing" style={{ background: "linear-gradient(135deg,#e8006f,#9c004a)", borderRadius: 7, padding: "7px 14px", fontSize: 12, color: "#fff", fontWeight: 700, textDecoration: "none" }}>
             ◆ Pricing <span style={{ fontSize: 10, opacity: 0.85 }}>30% OFF</span>
-          </a>
-          <a href="/sign-in" style={{ border: "1px solid #252535", borderRadius: 7, padding: "7px 14px", fontSize: 12, color: "#aaa", textDecoration: "none" }}>Login</a>
-          <a href="/sign-up" style={{ background: "#1a1a2e", border: "1px solid #3a3a5a", borderRadius: 7, padding: "7px 14px", fontSize: 12, color: "#fff", textDecoration: "none", fontWeight: 600 }}>Sign up</a>
+          </Link>
+          <Link href="/sign-in" style={{ border: "1px solid #252535", borderRadius: 7, padding: "7px 14px", fontSize: 12, color: "#aaa", textDecoration: "none" }}>Login</Link>
+          <Link href="/sign-up" style={{ background: "#1a1a2e", border: "1px solid #3a3a5a", borderRadius: 7, padding: "7px 14px", fontSize: 12, color: "#fff", textDecoration: "none", fontWeight: 600 }}>Sign up</Link>
         </div>
       </nav>
 
@@ -383,9 +384,9 @@ export default function PricingPage() {
         </div>
         <h2 style={{ fontSize: 26, fontWeight: 950, letterSpacing: -1, margin: "0 0 8px" }}>Ready to generate the impossible?</h2>
         <p style={{ color: "#666", fontSize: 13, margin: "0 0 22px" }}>Join 2 million creators. No credit card required.</p>
-        <a href="/sign-up" style={{ display: "inline-block", background: "linear-gradient(135deg,#e8006f,#9c004a)", color: "#fff", borderRadius: 11, padding: "13px 34px", fontSize: 14, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(232,0,111,0.35)" }}>
+        <Link href="/sign-up" style={{ display: "inline-block", background: "linear-gradient(135deg,#e8006f,#9c004a)", color: "#fff", borderRadius: 11, padding: "13px 34px", fontSize: 14, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(232,0,111,0.35)" }}>
           Start for Free →
-        </a>
+        </Link>
       </div>
     </div>
   );

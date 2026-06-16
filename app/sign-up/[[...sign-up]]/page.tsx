@@ -1,4 +1,4 @@
-import { SignIn } from '@clerk/nextjs';
+import { SignUp } from "@clerk/nextjs";
 
 export default function Page() {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
@@ -11,7 +11,7 @@ export default function Page() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black">
-      <SignIn />
+      <SignUp />
     </div>
   );
 }

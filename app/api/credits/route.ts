@@ -1,66 +1,59 @@
+import { auth } from "@clerk/nextjs/server";
+import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 
-import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
-import { auth } from '@clerk/nextjs/server'
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
-})
+  if (!supabaseUrl || !serviceRoleKey) {
+    return null;
+  }
 
-// Credit packages — matches your pricing page
-const CREDIT_PACKAGES = {
-  starter: { credits: 500, price: 999, name: 'Starter Pack' },      // $9.99
-  creator: { credits: 1500, price: 2499, name: 'Creator Pack' },     // $24.99
-  pro: { credits: 4000, price: 5999, name: 'Pro Pack' },             // $59.99
-  studio: { credits: 10000, price: 12999, name: 'Studio Pack' },     // $129.99
-} as const
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+    },
+  });
+}
 
-type PackageKey = keyof typeof CREDIT_PACKAGES
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Credits could not be loaded.";
+}
 
-export async function POST(req: NextRequest) {
+export async function GET() {
   try {
-    const { userId } = await auth()
+    const { userId } = await auth();
+
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { packageId } = await req.json()
+    const supabase = getSupabaseAdmin();
 
-    if (!packageId || !(packageId in CREDIT_PACKAGES)) {
-      return NextResponse.json({ error: 'Invalid package' }, { status: 400 })
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Supabase service role is not configured." },
+        { status: 503 },
+      );
     }
 
-    const pkg = CREDIT_PACKAGES[packageId as PackageKey]
+    const { data, error } = await supabase
+      .from("users")
+      .select("credits, plan")
+      .eq("clerk_id", userId)
+      .maybeSingle();
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Lumenfield AI — ${pkg.name}`,
-              description: `${pkg.credits.toLocaleString()} generation credits`,
-              images: ['https://novaframe-ruddy.vercel.app/logo.png'],
-            },
-            unit_amount: pkg.price,
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: {
-        userId,
-        credits: pkg.credits.toString(),
-        packageId,
-      },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success&credits=${pkg.credits}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?payment=cancelled`,
-    })
+    if (error) {
+      console.error("Credits lookup failed:", error);
+      return NextResponse.json({ credits: 0, plan: "free" });
+    }
 
-    return NextResponse.json({ url: session.url })
-  } catch (err: any) {
-    console.error('Checkout error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({
+      credits: typeof data?.credits === "number" ? data.credits : 0,
+      plan: typeof data?.plan === "string" ? data.plan : "free",
+    });
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
