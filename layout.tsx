@@ -9,7 +9,14 @@ export const metadata: Metadata = {
   applicationName: siteTitle,
   title: siteTitle,
   description: siteDescription,
-  keywords: ["Lumenfield AI Studio", "Lumenfield", "AI studio", "image generation", "video generation", "AI marketing"],
+  keywords: [
+    "Lumenfield AI Studio",
+    "Lumenfield",
+    "AI studio",
+    "image generation",
+    "video generation",
+    "AI marketing",
+  ],
   openGraph: {
     title: siteTitle,
     description: siteDescription,
@@ -35,3 +42,4 @@ export default function RootLayout({
       <body className="bg-black text-white antialiased">{children}</body>
     </html>
   );
+}
