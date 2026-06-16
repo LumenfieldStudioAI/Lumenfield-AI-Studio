@@ -10,7 +10,6 @@ const PACKAGES = [
     name: 'Starter',
     credits: 500,
     price: '$9.99',
-    priceNum: 999,
     perCredit: '$0.020',
     highlight: false,
     features: ['500 credits', '~25 video generations', '~100 image generations', 'Standard queue'],
@@ -20,7 +19,6 @@ const PACKAGES = [
     name: 'Creator',
     credits: 1500,
     price: '$24.99',
-    priceNum: 2499,
     perCredit: '$0.017',
     highlight: true,
     features: ['1,500 credits', '~75 video generations', '~300 image generations', 'Priority queue'],
@@ -30,7 +28,6 @@ const PACKAGES = [
     name: 'Pro',
     credits: 4000,
     price: '$59.99',
-    priceNum: 5999,
     perCredit: '$0.015',
     highlight: false,
     features: ['4,000 credits', '~200 video generations', '~800 image generations', 'Priority queue', 'Batch processing'],
@@ -40,7 +37,6 @@ const PACKAGES = [
     name: 'Studio',
     credits: 10000,
     price: '$129.99',
-    priceNum: 12999,
     perCredit: '$0.013',
     highlight: false,
     features: ['10,000 credits', '~500 video generations', '~2,000 image generations', 'Ultra priority queue', 'Batch processing', 'API access'],
@@ -51,13 +47,13 @@ export default function PricingPage() {
   const { isSignedIn } = useUser()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
   const handlePurchase = async (packageId: string) => {
     if (!isSignedIn) {
       router.push('/sign-in?redirect=/pricing')
       return
     }
-
     setLoading(packageId)
     try {
       const res = await fetch('/api/stripe/checkout', {
@@ -65,16 +61,14 @@ export default function PricingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ packageId }),
       })
-
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert('Checkout failed. Please try again.')
+        setMessage('Checkout failed. Please try again.')
       }
     } catch (err) {
-      console.error(err)
-      alert('Something went wrong.')
+      setMessage('Something went wrong.')
     } finally {
       setLoading(null)
     }
@@ -82,7 +76,6 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
       <div className="pt-24 pb-16 text-center px-4">
         <p className="text-xs tracking-[0.3em] uppercase text-zinc-500 mb-4">Credits</p>
         <h1 className="text-4xl md:text-6xl font-light tracking-tight mb-4">
@@ -91,9 +84,11 @@ export default function PricingPage() {
         <p className="text-zinc-400 text-lg max-w-xl mx-auto">
           Credits never expire. Use them across video, image, and audio generation.
         </p>
+        {message && (
+          <p className="mt-4 text-red-400 text-sm">{message}</p>
+        )}
       </div>
 
-      {/* Credit cost reference */}
       <div className="max-w-3xl mx-auto px-4 mb-16">
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
           <p className="text-zinc-400 text-sm mb-4 text-center">Credit cost per generation</p>
@@ -113,7 +108,6 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Packages */}
       <div className="max-w-6xl mx-auto px-4 pb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {PACKAGES.map((pkg) => (
@@ -130,7 +124,6 @@ export default function PricingPage() {
                   Most popular
                 </span>
               )}
-
               <div className="mb-6">
                 <p className={`text-xs uppercase tracking-widest mb-2 ${pkg.highlight ? 'text-zinc-600' : 'text-zinc-500'}`}>
                   {pkg.name}
@@ -140,7 +133,6 @@ export default function PricingPage() {
                   {pkg.perCredit} per credit
                 </p>
               </div>
-
               <ul className="space-y-2 mb-8 flex-1">
                 {pkg.features.map((f) => (
                   <li key={f} className={`text-sm flex items-start gap-2 ${pkg.highlight ? 'text-zinc-700' : 'text-zinc-400'}`}>
@@ -149,7 +141,6 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-
               <button
                 onClick={() => handlePurchase(pkg.id)}
                 disabled={loading === pkg.id}
@@ -164,10 +155,8 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
-
-        {/* Footer note */}
         <p className="text-center text-zinc-600 text-xs mt-12">
-          Payments are processed securely by Stripe. Credits are added instantly after payment.
+          Payments processed securely by Stripe. Credits added instantly after payment.
         </p>
       </div>
     </div>
