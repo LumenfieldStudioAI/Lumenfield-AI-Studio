@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import LumenTopNav from "@/components/layout/LumenTopNav";
 import "./globals.css";
 
 const siteTitle = "Lumenfield AI Studio";
-const siteDescription =
-  "Lumenfield AI Studio is an AI creative studio for generating cinematic images, videos, ads, and visual content.";
+const siteDescription = "Lumenfield AI Studio is an AI creative studio for generating cinematic images, videos, ads, and visual content.";
 
 export const metadata: Metadata = {
   applicationName: siteTitle,
@@ -31,17 +31,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const content = (
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  const inner = (
     <html lang="en">
-      <body className="bg-black text-white antialiased">{children}</body>
+      <body className="bg-black text-white antialiased">
+        <LumenTopNav />
+        {children}
+      </body>
     </html>
   );
 
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
   if (!publishableKey) {
-    return content;
+    return (
+      <html lang="en">
+        <body className="bg-black text-white antialiased">
+          <LumenTopNav />
+          {children}
+        </body>
+      </html>
+    );
   }
 
-  return <ClerkProvider publishableKey={publishableKey}>{content}</ClerkProvider>;
+  return <ClerkProvider publishableKey={publishableKey}>{inner}</ClerkProvider>;
 }
