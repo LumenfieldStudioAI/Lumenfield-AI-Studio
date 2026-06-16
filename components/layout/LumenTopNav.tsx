@@ -1,61 +1,82 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties } from "react";
+import { useState, useRef, type CSSProperties } from "react";
+import { useUser, SignOutButton } from "@clerk/nextjs";
 import LumenMegaMenu from "./LumenMegaMenu";
 
-const navItems = [
-  { label: "Explore", href: "/explore", menu: "explore" as const },
-  { label: "Image", href: "/image", menu: "image" as const },
-  { label: "Video", href: "/video", menu: "video" as const },
-  { label: "Audio", href: "/audio" },
-  { label: "Supercomputer", href: "/supercomputer" },
-  { label: "MCP & CLI", href: "/apps" },
-  { label: "Plugins", href: "/apps" },
-  { label: "Marketing Studio", href: "/marketing-studio/product" },
-  { label: "Cinema Studio", href: "/cinema-studio" },
-  { label: "AI Influencer", href: "/ai-influencer-studio" },
-  { label: "Canvas", href: "/canvas" },
-  { label: "Apps", href: "/apps" },
+type MenuKind = "create" | "studios" | "models" | "integrations" | null;
+
+const NAV = [
+  { label: "Create", menu: "create" as MenuKind, href: "/generate" },
+  { label: "Studios", menu: "studios" as MenuKind, href: "/studio" },
+  { label: "Models", menu: "models" as MenuKind, href: "/models" },
+  { label: "Integrations", menu: "integrations" as MenuKind, href: "/apps" },
+  { label: "Pricing", href: "/pricing", menu: null },
 ];
 
 export default function LumenTopNav() {
-  const [openMenu, setOpenMenu] = useState<"explore" | "image" | "video" | null>(null);
+  const [open, setOpen] = useState<MenuKind>(null);
+  const { isSignedIn, user } = useUser();
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = (menu: MenuKind) => {
+    if (leaveTimer.current) clearTimeout(leaveTimer.current);
+    setOpen(menu);
+  };
+
+  const handleLeave = () => {
+    leaveTimer.current = setTimeout(() => setOpen(null), 120);
+  };
 
   return (
-    <header style={styles.header} onMouseLeave={() => setOpenMenu(null)}>
-      <Link href="/" style={styles.brand}>
-        <span style={styles.brandMark}>L</span>
+    <header style={s.header} onMouseLeave={handleLeave}>
+      {/* Brand */}
+      <Link href="/" style={s.brand}>
+        <span style={s.mark}>L</span>
         <strong>Lumenfield</strong>
       </Link>
 
-      <nav style={styles.nav}>
-        {navItems.map((item) => (
-          <div key={item.label} style={styles.navWrap} onMouseEnter={() => setOpenMenu(item.menu ?? null)}>
-            <Link href={item.href} style={styles.navLink}>{item.label}</Link>
-            {item.menu && openMenu === item.menu && <LumenMegaMenu kind={item.menu} />}
+      {/* Nav */}
+      <nav style={s.nav}>
+        {NAV.map((item) => (
+          <div key={item.label} style={s.wrap} onMouseEnter={() => handleEnter(item.menu)}>
+            <Link href={item.href} style={s.link}>{item.label}</Link>
+            {item.menu && open === item.menu && (
+              <LumenMegaMenu kind={item.menu} onMouseEnter={() => handleEnter(item.menu)} />
+            )}
           </div>
         ))}
       </nav>
 
-      <div style={styles.actions}>
-        <Link href="/pricing" style={styles.pricing}>Pricing</Link>
-        <Link href="/login" style={styles.login}>Login</Link>
-        <Link href="/signup" style={styles.signup}>Sign up</Link>
+      {/* Actions */}
+      <div style={s.actions}>
+        {isSignedIn ? (
+          <>
+            <Link href="/library" style={s.btn}>Library</Link>
+            <Link href="/generate" style={s.cta}>+ Create</Link>
+            <div style={s.avatar}>{user?.firstName?.[0] ?? "U"}</div>
+          </>
+        ) : (
+          <>
+            <Link href="/sign-in" style={s.btn}>Log in</Link>
+            <Link href="/sign-up" style={s.cta}>Get started</Link>
+          </>
+        )}
       </div>
     </header>
   );
 }
 
-const styles: Record<string, CSSProperties> = {
-  header: { height: 58, display: "grid", gridTemplateColumns: "160px 1fr auto", alignItems: "center", gap: 16, padding: "0 18px", background: "#0f0f10", color: "#fff", borderBottom: "1px solid rgba(255,255,255,.08)", position: "sticky", top: 0, zIndex: 80 },
-  brand: { display: "flex", alignItems: "center", gap: 9, color: "#fff", textDecoration: "none", fontSize: 15 },
-  brandMark: { width: 30, height: 30, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(135deg, #d7ff1f, #71ff00)", color: "#111", fontWeight: 950, boxShadow: "0 0 22px rgba(215,255,31,.28)" },
-  nav: { display: "flex", alignItems: "center", gap: 3, minWidth: 0, overflowX: "auto" },
-  navWrap: { position: "relative", flex: "0 0 auto" },
-  navLink: { display: "block", color: "rgba(255,255,255,.72)", textDecoration: "none", fontSize: 13, fontWeight: 800, padding: "10px 9px", borderRadius: 999, whiteSpace: "nowrap" },
+const s: Record<string, CSSProperties> = {
+  header: { height: 56, display: "grid", gridTemplateColumns: "160px 1fr auto", alignItems: "center", gap: 16, padding: "0 18px", background: "#0c0c0d", borderBottom: "1px solid rgba(255,255,255,.07)", position: "sticky", top: 0, zIndex: 100 },
+  brand: { display: "flex", alignItems: "center", gap: 8, color: "#fff", textDecoration: "none", fontSize: 15, fontWeight: 700 },
+  mark: { width: 28, height: 28, borderRadius: 8, display: "grid", placeItems: "center", background: "linear-gradient(135deg,#d7ff1f,#71ff00)", color: "#111", fontWeight: 950, fontSize: 13 },
+  nav: { display: "flex", alignItems: "center", gap: 2 },
+  wrap: { position: "relative" },
+  link: { display: "block", color: "rgba(255,255,255,.7)", textDecoration: "none", fontSize: 13, fontWeight: 600, padding: "8px 12px", borderRadius: 8, whiteSpace: "nowrap" },
   actions: { display: "flex", alignItems: "center", gap: 8 },
-  pricing: { color: "rgba(255,255,255,.72)", textDecoration: "none", fontSize: 13, fontWeight: 800 },
-  login: { color: "rgba(255,255,255,.72)", textDecoration: "none", fontSize: 13, fontWeight: 800, padding: "9px 12px", borderRadius: 999, background: "rgba(255,255,255,.07)" },
-  signup: { color: "#111", textDecoration: "none", fontSize: 13, fontWeight: 950, padding: "9px 13px", borderRadius: 999, background: "#d7ff1f" },
+  btn: { color: "rgba(255,255,255,.7)", textDecoration: "none", fontSize: 13, fontWeight: 600, padding: "7px 12px", borderRadius: 8, background: "rgba(255,255,255,.07)" },
+  cta: { color: "#111", textDecoration: "none", fontSize: 13, fontWeight: 800, padding: "7px 14px", borderRadius: 8, background: "#d7ff1f" },
+  avatar: { width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#d7ff1f,#71ff00)", color: "#111", display: "grid", placeItems: "center", fontWeight: 900, fontSize: 13, cursor: "pointer" },
 };
