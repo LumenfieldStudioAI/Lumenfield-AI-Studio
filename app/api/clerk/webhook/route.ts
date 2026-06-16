@@ -1,43 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Webhook } from 'svix'
 import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(req: NextRequest) {
-  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET
+function verifyWebhook(payload: string, headers: Headers, secret: string): boolean {
+  const svixId = headers.get('svix-id') ?? ''
+  const svixTimestamp = headers.get('svix-timestamp') ?? ''
+  const svixSignature = headers.get('svix-signature') ?? ''
 
-  if (!webhookSecret) {
+  const toSign = `${svixId}.${svixTimestamp}.${payload}`
+  const secretBytes = Buffer.from(secret.replace('whsec_', ''), 'base64')
+  const computed = crypto.createHmac('sha256', secretBytes).update(toSign).digest('base64')
+  const expected = `v1,${computed}`
+
+  return svixSignature.split(' ').some(sig => sig === expected)
+}
+
+export async function POST(req: NextRequest) {
+  const secret = process.env.CLERK_WEBHOOK_SECRET
+  if (!secret) {
     return NextResponse.json({ error: 'No webhook secret' }, { status: 500 })
   }
 
-  const svix_id = req.headers.get('svix-id')
-  const svix_timestamp = req.headers.get('svix-timestamp')
-  const svix_signature = req.headers.get('svix-signature')
-
-  if (!svix_id || !svix_timestamp || !svix_signature) {
-    return NextResponse.json({ error: 'Missing headers' }, { status: 400 })
-  }
-
   const body = await req.text()
-  const wh = new Webhook(webhookSecret)
 
-  let evt: { type: string; data: { id: string; email_addresses: { email_address: string }[]; first_name: string; last_name: string; image_url: string } }
-
-  try {
-    evt = wh.verify(body, {
-      'svix-id': svix_id,
-      'svix-timestamp': svix_timestamp,
-      'svix-signature': svix_signature,
-    }) as typeof evt
-  } catch (err) {
-    console.error('Webhook verification failed:', err)
+  if (!verifyWebhook(body, req.headers, secret)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
+  const evt = JSON.parse(body)
   const { type, data } = evt
 
   if (type === 'user.created') {
@@ -53,23 +48,14 @@ export async function POST(req: NextRequest) {
       plan: 'free',
     }, { onConflict: 'clerk_id' })
 
-    if (error) {
-      console.error('Supabase insert error:', error)
-      return NextResponse.json({ error: 'DB error' }, { status: 500 })
-    }
-
-    console.log(`✅ New user synced: ${email}`)
+    if (error) console.error('Supabase error:', error)
+    else console.log(`✅ User synced: ${email}`)
   }
 
   if (type === 'user.updated') {
     const email = data.email_addresses?.[0]?.email_address
     const name = [data.first_name, data.last_name].filter(Boolean).join(' ')
-
-    await supabase.from('users').update({
-      email,
-      name,
-      avatar_url: data.image_url,
-    }).eq('clerk_id', data.id)
+    await supabase.from('users').update({ email, name, avatar_url: data.image_url }).eq('clerk_id', data.id)
   }
 
   return NextResponse.json({ received: true })
