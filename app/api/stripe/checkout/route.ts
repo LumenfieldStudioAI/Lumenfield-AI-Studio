@@ -1,99 +1,65 @@
-import { auth } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
+import { auth } from '@clerk/nextjs/server'
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-11-20.acacia',
+})
+
+// Credit packages — matches your pricing page
 const CREDIT_PACKAGES = {
-  starter: { credits: 500, price: 999, name: "Starter Pack" },
-  creator: { credits: 1500, price: 2499, name: "Creator Pack" },
-  pro: { credits: 4000, price: 5999, name: "Pro Pack" },
-  studio: { credits: 10000, price: 12999, name: "Studio Pack" },
-} as const;
+  starter: { credits: 500, price: 999, name: 'Starter Pack' },      // $9.99
+  creator: { credits: 1500, price: 2499, name: 'Creator Pack' },     // $24.99
+  pro: { credits: 4000, price: 5999, name: 'Pro Pack' },             // $59.99
+  studio: { credits: 10000, price: 12999, name: 'Studio Pack' },     // $129.99
+} as const
 
-type PackageKey = keyof typeof CREDIT_PACKAGES;
-
-function getAppUrl() {
-  const url =
-    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
-    "https://lumenfield-ai-studio.vercel.app";
-
-  return url.replace(/\/+$/, "");
-}
-
-function getStripe() {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-
-  if (!secretKey) {
-    return null;
-  }
-
-  return secretKey;
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Checkout could not be created.";
-}
+type PackageKey = keyof typeof CREDIT_PACKAGES
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-
+    const { userId } = await auth()
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const stripeSecretKey = getStripe();
-
-    if (!stripeSecretKey) {
-      return NextResponse.json(
-        { error: "Stripe secret key is not configured." },
-        { status: 503 },
-      );
-    }
-
-    const { packageId } = (await req.json()) as { packageId?: string };
+    const { packageId } = await req.json()
 
     if (!packageId || !(packageId in CREDIT_PACKAGES)) {
-      return NextResponse.json({ error: "Invalid package" }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid package' }, { status: 400 })
     }
 
-    const pkg = CREDIT_PACKAGES[packageId as PackageKey];
-    const appUrl = getAppUrl();
+    const pkg = CREDIT_PACKAGES[packageId as PackageKey]
 
-    const checkoutParams = new URLSearchParams({
-      "payment_method_types[0]": "card",
-      mode: "payment",
-      "line_items[0][price_data][currency]": "usd",
-      "line_items[0][price_data][product_data][name]": `Lumenfield AI Studio - ${pkg.name}`,
-      "line_items[0][price_data][product_data][description]": `${pkg.credits.toLocaleString()} generation credits`,
-      "line_items[0][price_data][unit_amount]": pkg.price.toString(),
-      "line_items[0][quantity]": "1",
-      "metadata[userId]": userId,
-      "metadata[credits]": pkg.credits.toString(),
-      "metadata[packageId]": packageId,
-      success_url: `${appUrl}/cinema-dashboard?payment=success&credits=${pkg.credits}`,
-      cancel_url: `${appUrl}/pricing?payment=cancelled`,
-    });
-
-    const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${stripeSecretKey}`,
-        "Content-Type": "application/x-www-form-urlencoded",
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Lumenfield AI — ${pkg.name}`,
+              description: `${pkg.credits.toLocaleString()} generation credits`,
+              images: ['https://novaframe-ruddy.vercel.app/logo.png'],
+            },
+            unit_amount: pkg.price,
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        userId,
+        credits: pkg.credits.toString(),
+        packageId,
       },
-      body: checkoutParams,
-    });
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success&credits=${pkg.credits}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?payment=cancelled`,
+    })
 
-    const session = (await response.json()) as { url?: string; error?: { message?: string } };
-
-    if (!response.ok || !session.url) {
-      return NextResponse.json(
-        { error: session.error?.message ?? "Checkout could not be created." },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({ url: session.url });
-  } catch (error) {
-    console.error("Checkout error:", error);
-    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ url: session.url })
+  } catch (err: any) {
+    console.error('Checkout error:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

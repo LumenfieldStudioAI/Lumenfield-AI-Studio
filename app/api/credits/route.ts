@@ -1,59 +1,31 @@
-import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
+import { createClient } from '@supabase/supabase-js'
 
-function getSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return null;
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      persistSession: false,
-    },
-  });
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Credits could not be loaded.";
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-
+    const { userId } = await auth()
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const supabase = getSupabaseAdmin();
-
-    if (!supabase) {
-      return NextResponse.json(
-        { error: "Supabase service role is not configured." },
-        { status: 503 },
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data, error } = await supabase
-      .from("users")
-      .select("credits, plan")
-      .eq("clerk_id", userId)
-      .maybeSingle();
+      .from('users')
+      .select('credits, plan')
+      .eq('clerk_id', userId)
+      .single()
 
-    if (error) {
-      console.error("Credits lookup failed:", error);
-      return NextResponse.json({ credits: 0, plan: "free" });
+    if (error || !data) {
+      return NextResponse.json({ credits: 0, plan: 'free' })
     }
 
-    return NextResponse.json({
-      credits: typeof data?.credits === "number" ? data.credits : 0,
-      plan: typeof data?.plan === "string" ? data.plan : "free",
-    });
-  } catch (error) {
-    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ credits: data.credits ?? 0, plan: data.plan ?? 'free' })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
