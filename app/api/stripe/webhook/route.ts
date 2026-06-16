@@ -58,12 +58,6 @@ export async function POST(req: NextRequest) {
         console.log(`✅ ${credits} credits added to user ${userId}`)
         break
       }
-
-      case 'payment_intent.payment_failed': {
-        const intent = event.data.object as Stripe.PaymentIntent
-        console.error('Payment failed:', intent.id)
-        break
-      }
     }
   } catch (err) {
     console.error('Webhook handler error:', err)
