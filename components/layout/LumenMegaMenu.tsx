@@ -1,95 +1,136 @@
 "use client";
-
+import Link from "next/link";
 import type { CSSProperties } from "react";
-import {
-  audioFeatures,
-  audioModels,
-  exploreProducts,
-  imageFeatures,
-  imageModels,
-  trendingTools,
-  videoFeatures,
-  videoModels,
-  type LumenFeature,
-  type LumenModel,
-} from "@/lib/lumen/modelCatalog";
 
-type MenuKind = "explore" | "image" | "video" | "audio";
+type MenuKind = "create" | "studios" | "models" | "integrations";
 
-type LumenMegaMenuProps = {
-  kind: MenuKind;
+const MENUS = {
+  create: {
+    sections: [
+      {
+        title: "Generate",
+        items: [
+          { label: "AI Image", desc: "Text to image with 10+ models", href: "/image", icon: "🖼️" },
+          { label: "AI Video", desc: "Text & image to video", href: "/video", icon: "🎬" },
+          { label: "Edit Image", desc: "Inpaint, outpaint, replace", href: "/edit", icon: "✏️" },
+          { label: "Upscale", desc: "4K resolution enhancement", href: "/upscale", icon: "⬆️" },
+          { label: "Audio", desc: "Music, voice, sound effects", href: "/audio", icon: "🎵" },
+          { label: "Lipsync", desc: "Animate faces with audio", href: "/lipsync", icon: "👄" },
+        ],
+      },
+      {
+        title: "My Work",
+        items: [
+          { label: "Library", desc: "Your generation history", href: "/library", icon: "📚" },
+          { label: "Projects", desc: "Organize your work", href: "/projects", icon: "📁" },
+          { label: "Characters", desc: "Your Soul IDs", href: "/character", icon: "👤" },
+        ],
+      },
+    ],
+  },
+  studios: {
+    sections: [
+      {
+        title: "Creative Studios",
+        items: [
+          { label: "Cinema Studio", desc: "Cinematic video production", href: "/cinema-studio", icon: "🎥" },
+          { label: "Marketing Studio", desc: "Product ads & campaigns", href: "/marketing-studio", icon: "📣" },
+          { label: "AI Influencer", desc: "Consistent virtual personas", href: "/ai-influencer-studio", icon: "⭐" },
+          { label: "Canvas", desc: "Workflow board & moodboard", href: "/canvas", icon: "🎨" },
+        ],
+      },
+      {
+        title: "Power Tools",
+        items: [
+          { label: "Supercomputer", desc: "Large-scale AI content", href: "/supercomputer", icon: "⚡" },
+          { label: "Storyboard", desc: "Scene planning & sequencing", href: "/storyboard", icon: "📋" },
+          { label: "Community", desc: "Browse & share creations", href: "/explore", icon: "🌐" },
+        ],
+      },
+    ],
+  },
+  models: {
+    sections: [
+      {
+        title: "Image Models",
+        items: [
+          { label: "Soul V2", desc: "Character consistency", href: "/image?model=soul-v2", icon: "👁️", badge: "TOP" },
+          { label: "Nano Banana Pro", desc: "Fast, high quality", href: "/image?model=nano-banana-pro", icon: "🍌", badge: "NEW" },
+          { label: "GPT Image", desc: "OpenAI image generation", href: "/image?model=gpt", icon: "✨" },
+          { label: "Seedream", desc: "Artistic & creative", href: "/image?model=seedream", icon: "🌱" },
+          { label: "Flux", desc: "Photorealistic output", href: "/image?model=flux", icon: "⚡" },
+          { label: "Kontext", desc: "Context-aware editing", href: "/image?model=kontext", icon: "🧠" },
+        ],
+      },
+      {
+        title: "Video Models",
+        items: [
+          { label: "Seedance 2.0", desc: "Cinematic video generation", href: "/video?model=seedance_2_0", icon: "🎬", badge: "NEW" },
+          { label: "Kling 3.0", desc: "High motion quality", href: "/video?model=kling", icon: "🎯" },
+          { label: "Veo 3", desc: "Google DeepMind video", href: "/video?model=veo-3", icon: "🔮", badge: "TOP" },
+          { label: "Sora", desc: "OpenAI video model", href: "/video?model=sora", icon: "☀️" },
+          { label: "MiniMax Hailuo", desc: "Fast video generation", href: "/video?model=minimax", icon: "💨" },
+          { label: "Wan 2.6", desc: "Open source video", href: "/video?model=wan", icon: "🌊" },
+        ],
+      },
+    ],
+  },
+  integrations: {
+    sections: [
+      {
+        title: "Developer",
+        items: [
+          { label: "MCP Server", desc: "Connect Claude & AI agents", href: "/mcp", icon: "🤖" },
+          { label: "API Access", desc: "REST API for developers", href: "/docs", icon: "📡" },
+          { label: "CLI Tool", desc: "Command line interface", href: "/mcp", icon: "💻" },
+        ],
+      },
+      {
+        title: "App Plugins",
+        items: [
+          { label: "Photoshop Plugin", desc: "Generate inside Photoshop", href: "/apps", icon: "🅿️" },
+          { label: "DaVinci Plugin", desc: "AI in your timeline", href: "/apps", icon: "🎞️" },
+          { label: "Chrome Extension", desc: "Lumenfield anywhere", href: "/apps", icon: "🌐" },
+          { label: "Mobile App", desc: "iOS & Android", href: "/apps", icon: "📱" },
+        ],
+      },
+    ],
+  },
 };
 
-type BadgeValue = "NEW" | "TOP" | "TRENDING" | "EXCLUSIVE" | undefined;
-
-function Badge({ value }: { value: BadgeValue }) {
-  if (!value) return null;
-  return <span style={value === "TRENDING" ? styles.hotBadge : styles.badge}>{value}</span>;
-}
-
-function FeatureRow({ item }: { item: LumenFeature }) {
+export default function LumenMegaMenu({ kind, onMouseEnter }: { kind: MenuKind; onMouseEnter?: () => void }) {
+  const menu = MENUS[kind];
   return (
-    <div style={styles.row}>
-      <div style={styles.icon}>{item.icon}<Badge value={item.badge} /></div>
-      <div><strong style={styles.rowTitle}>{item.title}</strong><p style={styles.rowDesc}>{item.desc}</p></div>
+    <div style={s.panel} onMouseEnter={onMouseEnter}>
+      {menu.sections.map((section) => (
+        <div key={section.title}>
+          <p style={s.label}>{section.title}</p>
+          {section.items.map((item) => (
+            <Link key={item.label} href={item.href} style={s.item}>
+              <span style={s.icon}>{item.icon}</span>
+              <span>
+                <span style={s.itemLabel}>
+                  {item.label}
+                  {"badge" in item && item.badge && (
+                    <span style={s.badge}>{item.badge}</span>
+                  )}
+                </span>
+                <span style={s.itemDesc}>{item.desc}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
 
-function ModelRow({ item }: { item: LumenModel }) {
-  return (
-    <div style={styles.row}>
-      <div style={styles.icon}>{item.icon}<Badge value={item.badge} /></div>
-      <div><strong style={styles.rowTitle}>{item.name}</strong><p style={styles.rowDesc}>{item.desc}</p></div>
-    </div>
-  );
-}
-
-function getMenuData(kind: MenuKind) {
-  if (kind === "image") return { features: imageFeatures, models: imageModels };
-  if (kind === "video") return { features: videoFeatures, models: videoModels };
-  return { features: audioFeatures, models: audioModels };
-}
-
-export default function LumenMegaMenu({ kind }: LumenMegaMenuProps) {
-  if (kind === "explore") {
-    return (
-      <div style={styles.explorePanel}>
-        <div style={styles.search}>Search models, products, apps and creators</div>
-        <div style={styles.tabs}><b>All</b><span>Models</span><span>Products</span><span>Characters</span><span>Community</span><span>Apps</span></div>
-        <p style={styles.sectionLabel}>Popular products</p>
-        <div style={styles.productGrid}>{exploreProducts.map((item) => <div key={item.title} style={styles.productCard}><div><small>{item.badge}</small><h3 style={styles.productTitle}>{item.title}</h3><p style={styles.productDesc}>{item.desc}</p></div></div>)}</div>
-        <p style={styles.sectionLabel}>Trending</p>
-        <div style={styles.trendingGrid}>{trendingTools.map((item) => <FeatureRow key={item.title} item={item} />)}</div>
-      </div>
-    );
-  }
-
-  const { features, models } = getMenuData(kind);
-
-  return (
-    <div style={styles.panel}>
-      <div><p style={styles.sectionLabel}>Features</p>{features.map((item) => <FeatureRow key={item.title} item={item} />)}</div>
-      <div><p style={styles.sectionLabel}>Models</p>{models.map((item) => <ModelRow key={item.name} item={item} />)}</div>
-    </div>
-  );
-}
-
-const styles: Record<string, CSSProperties> = {
-  panel: { position: "absolute", top: 42, left: 0, zIndex: 40, width: 860, maxHeight: "calc(100vh - 70px)", overflow: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 26, padding: 22, borderRadius: 24, background: "#1b1d1f", border: "1px solid rgba(255,255,255,.08)", boxShadow: "0 24px 90px rgba(0,0,0,.55)" },
-  explorePanel: { position: "absolute", top: 42, left: 0, zIndex: 40, width: 860, padding: 18, borderRadius: 24, background: "#282421", border: "1px solid rgba(255,255,255,.09)", boxShadow: "0 24px 90px rgba(0,0,0,.55)" },
-  search: { height: 58, display: "flex", alignItems: "center", padding: "0 18px", borderRadius: 20, background: "rgba(255,255,255,.07)", color: "rgba(255,255,255,.45)", fontSize: 18, marginBottom: 12 },
-  tabs: { display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 18, color: "rgba(255,255,255,.62)", fontSize: 14 },
-  sectionLabel: { margin: "0 0 12px", color: "rgba(255,255,255,.42)", fontSize: 14 },
-  row: { display: "grid", gridTemplateColumns: "50px 1fr", alignItems: "center", gap: 12, minHeight: 64, marginBottom: 10 },
-  icon: { position: "relative", width: 50, height: 50, borderRadius: 14, background: "rgba(255,255,255,.06)", color: "#fff", display: "grid", placeItems: "center", fontWeight: 950, fontSize: 11 },
-  rowTitle: { display: "block", color: "#fff", fontSize: 15, marginBottom: 4 },
-  rowDesc: { margin: 0, color: "rgba(255,255,255,.45)", fontSize: 13, lineHeight: 1.35 },
-  badge: { position: "absolute", top: -8, right: -10, background: "#d7ff1f", color: "#111", borderRadius: 6, padding: "2px 6px", fontSize: 10, fontWeight: 950 },
-  hotBadge: { position: "absolute", top: -8, right: -14, background: "#ff2c91", color: "#fff", borderRadius: 6, padding: "2px 6px", fontSize: 10, fontWeight: 950 },
-  productGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 },
-  productCard: { minHeight: 106, display: "flex", alignItems: "end", padding: 14, borderRadius: 14, background: "linear-gradient(135deg, rgba(215,255,31,.16), rgba(255,44,145,.18))", border: "1px solid rgba(255,255,255,.08)" },
-  productTitle: { margin: "4px 0", fontSize: 15, color: "#fff" },
-  productDesc: { margin: 0, color: "rgba(255,255,255,.5)", fontSize: 12, lineHeight: 1.35 },
-  trendingGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 18 },
+const s: Record<string, CSSProperties> = {
+  panel: { position: "absolute", top: 44, left: 0, zIndex: 200, width: 680, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, padding: 20, borderRadius: 16, background: "#141416", border: "1px solid rgba(255,255,255,.08)", boxShadow: "0 20px 80px rgba(0,0,0,.7)" },
+  label: { margin: "0 0 8px", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,.35)" },
+  item: { display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", borderRadius: 10, textDecoration: "none", marginBottom: 2, transition: "background .15s" },
+  icon: { width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,.06)", display: "grid", placeItems: "center", fontSize: 14, flexShrink: 0 },
+  itemLabel: { display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#fff", marginBottom: 1 },
+  itemDesc: { display: "block", fontSize: 11, color: "rgba(255,255,255,.4)", lineHeight: 1.4 },
+  badge: { fontSize: 9, fontWeight: 800, padding: "2px 5px", borderRadius: 4, background: "#d7ff1f", color: "#111" },
 };
