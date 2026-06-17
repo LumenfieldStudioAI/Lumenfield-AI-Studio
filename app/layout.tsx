@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
-import LumenTopNav from "@/components/layout/LumenTopNav";
 import "./globals.css";
 
 const siteTitle = "Lumenfield AI Studio";
@@ -31,27 +29,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-  const inner = (
+  return (
     <html lang="en">
-      <body className="bg-black text-white antialiased">
-        <LumenTopNav />
+      <body style={{ margin: 0, padding: 0, background: "#050505", color: "#fff" }}>
         {children}
       </body>
     </html>
   );
-
-  if (!publishableKey) {
-    return (
-      <html lang="en">
-        <body className="bg-black text-white antialiased">
-          <LumenTopNav />
-          {children}
-        </body>
-      </html>
-    );
-  }
-
-  return <ClerkProvider publishableKey={publishableKey}>{inner}</ClerkProvider>;
 }
