@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const siteTitle = "Lumenfield AI Studio";
@@ -30,10 +31,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body style={{ margin: 0, padding: 0, background: "#050505", color: "#fff" }}>
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body style={{ margin: 0, padding: 0, background: "#050505", color: "#fff" }}>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
