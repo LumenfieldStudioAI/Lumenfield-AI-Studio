@@ -4,30 +4,23 @@ import { findResultUrl } from "@/lib/generation/findResultUrl";
 
 export const runtime = "nodejs";
 
-// ─── IMAGE MODELS (Higgsfield model-catalog.md'den uyarlandı) ─────────────────
 const imageModelMap: Record<string, string> = {
-  "gpt-image-2":      "fal-ai/gpt-image-2",
-  "nano-banana-pro":  "fal-ai/nano-banana-pro",
-  "nano-banana-2":    "fal-ai/nano-banana",
-  "flux-2":           "fal-ai/flux-pro/v1.1",
-  "flux-dev":         "fal-ai/flux/dev",
-  "flux-schnell":     "fal-ai/flux/schnell",
-  "recraft":          "fal-ai/recraft-v3",
-  "seedream-5-lite":  "fal-ai/bytedance/seedream/v4",
-  "seedream-4-5":     "fal-ai/bytedance/seedream/v3",
-  "grok-image":       "fal-ai/grok-imagine/image",
-  "gpt-image-1-5":    "fal-ai/gpt-image-1.5",
-  "z-image":          "fal-ai/z-image",
-  "reve":             "fal-ai/reve",
+  "gpt-image-2":     "fal-ai/gpt-image-2",
+  "nano-banana-pro": "fal-ai/nano-banana-pro",
+  "nano-banana-2":   "fal-ai/nano-banana",
+  "flux-2":          "fal-ai/flux-pro/v1.1",
+  "flux-dev":        "fal-ai/flux/dev",
+  "flux-schnell":    "fal-ai/flux/schnell",
+  "recraft":         "fal-ai/recraft-v3",
+  "seedream-5-lite": "fal-ai/bytedance/seedream/v4",
+  "grok-image":      "fal-ai/grok-imagine/image",
+  "z-image":         "fal-ai/z-image",
 };
 
-// ─── VIDEO MODELS (güncel FAL endpoint'leri) ──────────────────────────────────
 const videoModelMap: Record<string, string> = {
-  // Cinema Studio modelleri → Seedance/Kling'e yönlendirir
   "cs35":             "fal-ai/bytedance/seedance/v2/pro/text-to-video",
   "cs30":             "fal-ai/kling-video/v3/pro/text-to-video",
   "cs25":             "fal-ai/bytedance/seedance/v1/pro/text-to-video",
-  // Video modelleri
   "seedance-2":       "fal-ai/bytedance/seedance/v2/pro/text-to-video",
   "seedance-2-fast":  "fal-ai/bytedance/seedance/v2/lite/text-to-video",
   "seedance-1-5-pro": "fal-ai/bytedance/seedance/v1/pro/text-to-video",
@@ -38,7 +31,6 @@ const videoModelMap: Record<string, string> = {
   "veo-3-1-lite":     "fal-ai/veo3.1/lite",
   "wan-2-7":          "fal-ai/wan/v2.7/text-to-video",
   "happyhorse":       "fal-ai/happy-horse",
-  "grok-video":       "fal-ai/grok-imagine/video",
 };
 
 function toImageSize(aspect?: string): string {
@@ -76,13 +68,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Audio/apps → gelecekte eklenecek
     if (mode === "audio" || mode === "apps") {
-      return NextResponse.json({
-        ok: true,
-        mode,
-        message: `${mode} mode coming soon.`,
-      });
+      return NextResponse.json({ ok: true, mode, message: `${mode} mode coming soon.` });
     }
 
     fal.config({ credentials: key });
@@ -93,7 +80,6 @@ export async function POST(req: NextRequest) {
       ? (videoModelMap[resolvedId] ?? videoModelMap["seedance-2"])
       : (imageModelMap[resolvedId] ?? imageModelMap["gpt-image-2"]);
 
-    // Input oluştur
     const input: Record<string, unknown> = { prompt };
 
     if (isVideo) {
