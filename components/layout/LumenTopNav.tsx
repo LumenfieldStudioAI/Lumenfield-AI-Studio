@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import LumenMegaMenu from '@/components/layout/LumenMegaMenu'
 
 type MegaMenuItem = {
   label: string
@@ -446,7 +447,9 @@ export default function LumenNav() {
                     <ChevronDown />
                   </button>
                   {openMenu === id && (
-                    <MegaMenuPanel menu={menuMap[id]} onClose={() => setOpenMenu(null)} />
+                    (id === 'image' || id === 'video' || id === 'audio')
+                      ? <LumenMegaMenu kind={id as 'image' | 'video' | 'audio'} />
+                      : <MegaMenuPanel menu={menuMap[id]} onClose={() => setOpenMenu(null)} />
                   )}
                 </div>
               )
