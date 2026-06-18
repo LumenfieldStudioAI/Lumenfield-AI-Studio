@@ -9,15 +9,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/stripe/webhook(.*)",
 ]);
 
-const isClerkConfigured = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
-);
-
 export default clerkMiddleware(async (auth, req) => {
-  if (!isClerkConfigured) {
-    return;
-  }
-
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
