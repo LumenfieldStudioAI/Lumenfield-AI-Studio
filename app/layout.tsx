@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 import LumenNav from "@/components/layout/LumenTopNav";
 
 const siteTitle = "Lumenfield AI Studio";
@@ -39,20 +40,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        style={{
-          margin: 0,
-          background: "#0f1113",
-          color: "#ffffff",
-          fontFamily: "Inter, Arial, Helvetica, sans-serif",
-          WebkitFontSmoothing: "antialiased",
-          MozOsxFontSmoothing: "grayscale",
-        }}
-      >
-        <LumenNav />
-        <main>{children}</main>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          style={{
+            margin: 0,
+            background: "#0f1113",
+            color: "#ffffff",
+            fontFamily: "Inter, Arial, Helvetica, sans-serif",
+            WebkitFontSmoothing: "antialiased",
+            MozOsxFontSmoothing: "grayscale",
+          }}
+        >
+          <LumenNav />
+          <main>{children}</main>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
