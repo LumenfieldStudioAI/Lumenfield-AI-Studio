@@ -2223,7 +2223,6 @@ export default function Lumenfield() {
   return (
     <>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
-     
       <main>{pages[page]}</main>
     </>
   );
