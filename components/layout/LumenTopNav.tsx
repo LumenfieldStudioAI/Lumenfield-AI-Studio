@@ -343,23 +343,17 @@ export default function LumenNav() {
             textDecoration: 'none',
             flexShrink: 0,
           }}>
-            <span style={{
-              width: 30,
-              height: 30,
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #ff4da6, #e8006f 55%, #7c1dff)',
-              boxShadow: '0 0 18px rgba(232,0,111,0.35)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 900,
-              fontSize: 13,
-              flexShrink: 0,
-              fontFamily: 'system-ui',
-            }}>
-              LF
-            </span>
+            <img
+              src="/logo.png"
+              alt="Lumenfield"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                objectFit: 'cover',
+                flexShrink: 0,
+              }}
+            />
             <strong style={{
               color: 'white',
               fontSize: 15,
