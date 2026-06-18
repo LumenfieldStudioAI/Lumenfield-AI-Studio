@@ -1,46 +1,75 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-// ── Types ────────────────────────────────────────────────────
+type MegaMenuId = 'image' | 'video' | 'audio' | 'plugins'
+
 type MegaMenuItem = {
   label: string
   href: string
   desc?: string
-  badge?: string
-  icon?: string
+  badge?: 'New' | 'Top'
+  icon: string
 }
 
 type MegaMenu = {
-  id: string
+  id: MegaMenuId
   sections: {
-    title?: string
+    title: string
     items: MegaMenuItem[]
   }[]
 }
 
-// ── Mega Menu Data ───────────────────────────────────────────
+type NavItem = {
+  label: string
+  href: string
+  exact?: boolean
+  menu?: MegaMenuId
+  routes?: string[]
+  badge?: 'New'
+}
+
 const IMAGE_MENU: MegaMenu = {
   id: 'image',
   sections: [
     {
-      title: 'Generate',
+      title: 'Features',
       items: [
-        { label: 'Text to Image', href: '/generate?mode=image', desc: 'Create images from prompts' },
-        { label: 'AI Photo Studio', href: '/generate?mode=image&model=soul', desc: 'Fashion, portrait & editorial' },
-        { label: 'Product Image', href: '/generate?mode=image&model=product', desc: 'Studio product photos' },
-        { label: 'Character Creator', href: '/character', desc: 'Build reusable AI characters' },
+        { label: 'Create Image', href: '/generate?mode=image', desc: 'Generate AI images', icon: 'IMG' },
+        { label: 'Cinematic Cameras', href: '/cinema-studio', desc: 'Image generation with camera controls', icon: 'CAM', badge: 'Top' },
+        { label: 'Canvas', href: '/canvas', desc: 'Visual ideation meets repeatable AI workflows.', icon: 'CAN', badge: 'New' },
+        { label: 'Moodboard - Lumenfield', href: '/canvas', desc: 'Turn your references into a focused moodboard', icon: 'MOO' },
+        { label: 'Soul ID Character', href: '/character', desc: 'Create unique character', icon: 'ID' },
+        { label: 'AI Influencer', href: '/ai-influencer-studio', desc: 'Create and manage your AI influencer', icon: 'AI' },
+        { label: 'Photodump', href: '/gallery', desc: 'Generate your aesthetic', icon: 'GAL', badge: 'New' },
+        { label: 'Relight', href: '/edit', desc: 'Adjust lighting position, color, and brightness', icon: 'LUX' },
+        { label: 'Inpaint', href: '/edit', desc: 'Select an area, describe the change', icon: 'EDT' },
+        { label: 'Image Upscale', href: '/upscale', desc: 'Enhance image quality', icon: '4K' },
+        { label: 'Face Swap', href: '/character', desc: 'Create realistic face swaps', icon: 'FS' },
+        { label: 'Character Swap', href: '/character', desc: 'Create realistic character swaps', icon: 'CS' },
+        { label: 'Draw to Edit', href: '/edit', desc: 'From sketch to picture', icon: 'DRW' },
+        { label: 'Fashion Factory', href: '/generate?mode=image', desc: 'Create fashion sets', icon: 'FIT' },
       ],
     },
     {
-      title: 'Edit',
+      title: 'Models',
       items: [
-        { label: 'Edit Image', href: '/edit', desc: 'Inpaint, replace, transform' },
-        { label: 'Image Upscale', href: '/upscale', desc: '2K/4K enhancement' },
-        { label: 'Background Remove', href: '/edit?tool=bg-remove', desc: 'Clean cutouts instantly' },
-        { label: 'Multi Reference', href: '/edit?tool=multi-ref', desc: 'Combine multiple references' },
+        { label: 'Lumenfield Soul 2.0', href: '/generate?mode=image&model=soul-v2', desc: 'Next generation ultra-realistic fashion visuals', icon: 'LF', badge: 'Top' },
+        { label: 'Lumenfield Soul Cinema', href: '/generate?mode=image&model=soul-cinema', desc: 'Cinematic film-grade aesthetic', icon: 'LF' },
+        { label: 'Lumenfield Popcorn', href: '/storyboard', desc: 'Storyboard, edit, create', icon: 'POP' },
+        { label: 'GPT Image 2', href: '/generate?mode=image&model=gpt-image-2', desc: '4K images with near-perfect text rendering', icon: 'GPT', badge: 'New' },
+        { label: 'Recraft V4.1', href: '/generate?mode=image&model=recraft-v4-1', desc: 'Photorealistic and expressive image generation', icon: 'REC', badge: 'New' },
+        { label: 'Nano Banana 2', href: '/generate?mode=image&model=nano-banana-2', desc: 'Pro quality at Flash speed', icon: 'NB' },
+        { label: 'Nano Banana Pro', href: '/generate?mode=image&model=nano-banana-pro', desc: 'Best 4K image model ever', icon: 'NBP', badge: 'Top' },
+        { label: 'Seedream 5.0 Lite', href: '/generate?mode=image&model=seedream-5-lite', desc: 'Intelligent visual reasoning', icon: 'SD' },
+        { label: 'GPT Image 1.5', href: '/generate?mode=image&model=gpt-image-1-5', desc: 'True-color precision rendering', icon: 'GPT' },
+        { label: 'Grok Imagine', href: '/generate?mode=image&model=grok-image', desc: 'Versatile image styles by xAI', icon: 'GRK' },
+        { label: 'FLUX.2', href: '/generate?mode=image&model=flux-2', desc: 'Speed-optimized detail', icon: 'FLX' },
+        { label: 'Reve', href: '/generate?mode=image&model=reve', desc: 'Advanced image editing model', icon: 'REV' },
+        { label: 'Z-Image', href: '/generate?mode=image&model=z-image', desc: 'Instant lifelike portraits', icon: 'Z' },
+        { label: 'Topaz', href: '/upscale', desc: 'High-resolution upscaler', icon: 'TPZ' },
       ],
     },
   ],
@@ -50,21 +79,41 @@ const VIDEO_MENU: MegaMenu = {
   id: 'video',
   sections: [
     {
-      title: 'Generate',
+      title: 'Features',
       items: [
-        { label: 'Text to Video', href: '/generate?mode=video', desc: 'Cinematic video from prompts' },
-        { label: 'Image to Video', href: '/generate?mode=video&type=i2v', desc: 'Animate your images' },
-        { label: 'Cinema Studio', href: '/generate', desc: 'AI director & camera control', badge: 'New' },
-        { label: 'Marketing Studio', href: '/marketing', desc: 'Product ads in one click' },
+        { label: 'Create Video', href: '/generate?mode=video', desc: 'Generate AI videos', icon: 'VID' },
+        { label: 'Cinema Studio', href: '/cinema-studio', desc: 'Cinematic video with AI director', icon: 'CIN', badge: 'Top' },
+        { label: 'Mixed Media', href: '/canvas', desc: 'Create mixed media projects', icon: 'MIX' },
+        { label: 'Edit Video', href: '/edit', desc: 'Edit scenes, shots, elements', icon: 'EDT' },
+        { label: 'Click to Ad', href: '/marketing-studio', desc: 'Turn product URLs into video ads', icon: 'AD' },
+        { label: 'Sora 2 Trends', href: '/generate?mode=video&model=sora-2', desc: 'Turn ideas into viral videos', icon: 'S2' },
+        { label: 'Lipsync Studio', href: '/lipsync', desc: 'Create talking clips', icon: 'LIP' },
+        { label: 'Draw to Video', href: '/generate?mode=video', desc: 'Sketch turns into a cinema', icon: 'DRW' },
+        { label: 'Sketch to Video', href: '/generate?mode=video', desc: 'From sketch to video with Sora 2', icon: 'SKT' },
+        { label: 'UGC Factory', href: '/marketing-studio', desc: 'Build UGC video with avatar', icon: 'UGC', badge: 'New' },
+        { label: 'Video Upscale', href: '/upscale?mode=video', desc: 'Enhance video quality', icon: '4K' },
+        { label: 'Lumenfield Animate', href: '/generate?mode=video', desc: 'Video smart replacement', icon: 'ANI' },
+        { label: 'Vibe Motion', href: '/generate?mode=video', desc: 'Create professional motion graphics', icon: 'VIB' },
+        { label: 'Recast Studio', href: '/character', desc: 'Swap characters in videos', icon: 'REC' },
       ],
     },
     {
-      title: 'Tools',
+      title: 'Models',
       items: [
-        { label: 'Lipsync Studio', href: '/lipsync', desc: 'Sync audio to any video' },
-        { label: 'Talking Avatar', href: '/character?mode=avatar', desc: 'Animated AI presenters' },
-        { label: 'Video Upscale', href: '/upscale?mode=video', desc: '1080p / 4K enhancement' },
-        { label: 'Viral Presets', href: '/presets', desc: 'One-click cinematic effects' },
+        { label: 'Seedance 2.0', href: '/generate?mode=video&model=seedance-2', desc: 'Most advanced video model', icon: 'SD', badge: 'Top' },
+        { label: 'Kling 3.0', href: '/generate?mode=video&model=kling-3', desc: 'Cinematic videos with audio', icon: 'K3', badge: 'Top' },
+        { label: 'Kling 3.0 Turbo', href: '/generate?mode=video&model=kling-3-turbo', desc: 'Faster 3.0 generation with native audio', icon: 'K3T', badge: 'New' },
+        { label: 'Kling 3.0 Motion Control', href: '/generate?mode=video&model=kling-3-motion', desc: 'Transfer motion from video to image', icon: 'KMC' },
+        { label: 'Kling O1 Edit', href: '/generate?mode=video&model=kling-o1-edit', desc: 'Advanced video editing', icon: 'KO1' },
+        { label: 'Sora 2', href: '/generate?mode=video&model=sora-2', desc: "OpenAI's most advanced video model", icon: 'S2' },
+        { label: 'Google Veo 3.1 Lite', href: '/generate?mode=video&model=veo-3-1-lite', desc: 'Fast video generation by Google', icon: 'G' },
+        { label: 'Google Veo 3.1', href: '/generate?mode=video&model=veo-3-1', desc: 'Advanced AI video with sound', icon: 'G' },
+        { label: 'HappyHorse', href: '/generate?mode=video&model=happyhorse', desc: "Alibaba's #1 ranked video and audio model", icon: 'HH' },
+        { label: 'Grok Imagine 1.5', href: '/generate?mode=video&model=grok-video', desc: 'Cinematic videos with synchronized audio', icon: 'GRK', badge: 'New' },
+        { label: 'Wan 2.7', href: '/generate?mode=video&model=wan-2-7', desc: 'AI video generation with first and end frame control', icon: 'WAN' },
+        { label: 'Minimax Hailuo 2.3', href: '/generate?mode=video&model=minimax-hailuo', desc: 'Fastest high-dynamic video', icon: 'MM' },
+        { label: 'Seedance 1.5 Pro', href: '/generate?mode=video&model=seedance-1-5-pro', desc: 'Pro-grade audio-visual sync', icon: 'SDP' },
+        { label: 'Lumenfield DOP', href: '/generate?mode=video&model=dop', desc: 'VFX and camera control', icon: 'LF' },
       ],
     },
   ],
@@ -74,12 +123,20 @@ const AUDIO_MENU: MegaMenu = {
   id: 'audio',
   sections: [
     {
-      title: 'Generate',
+      title: 'Features',
       items: [
-        { label: 'AI Voice Over', href: '/audio?mode=voiceover', desc: 'Studio-quality narration' },
-        { label: 'Voice Translation', href: '/audio?mode=translate', desc: 'Dub in any language' },
-        { label: 'Music Generation', href: '/audio?mode=music', desc: 'Original AI music tracks' },
-        { label: 'Sound Effects', href: '/audio?mode=sfx', desc: 'Cinematic sound design' },
+        { label: 'Voiceover', href: '/audio?mode=voiceover', desc: 'Generate speech from text', icon: 'VO' },
+        { label: 'Change Voice', href: '/audio?mode=voice', desc: 'Swap voices in any video', icon: 'CHG' },
+        { label: 'Translation', href: '/audio?mode=translate', desc: 'Translate speech in any video', icon: 'TR', badge: 'New' },
+      ],
+    },
+    {
+      title: 'Models',
+      items: [
+        { label: 'Eleven v3', href: '/audio?model=eleven-v3', desc: 'Expressive AI voice with emotion control', icon: '11' },
+        { label: 'MiniMax Speech 2.8 HD', href: '/audio?model=minimax-speech', desc: 'Studio-quality text-to-speech', icon: 'MM' },
+        { label: 'Seed Speech', href: '/audio?model=seed-speech', desc: 'ByteDance multilingual text-to-speech', icon: 'SD', badge: 'New' },
+        { label: 'VibeVoice', href: '/audio?model=vibevoice', desc: 'Long-form expressive voice synthesis', icon: 'V' },
       ],
     },
   ],
@@ -91,43 +148,28 @@ const PLUGINS_MENU: MegaMenu = {
     {
       title: 'Integrations',
       items: [
-        { label: 'Premiere Pro', href: '/plugins/premiere', desc: 'AI tools inside Premiere', badge: 'New' },
-        { label: 'After Effects', href: '/plugins/after-effects', desc: 'Motion & VFX assistant', badge: 'New' },
-        { label: 'DaVinci Resolve', href: '/plugins/davinci', desc: 'Color & edit assistant', badge: 'New' },
-        { label: 'Figma', href: '/plugins/figma', desc: 'Design to video workflow' },
-        { label: 'Photoshop', href: '/plugins/photoshop', desc: 'Real-time AI generation' },
-        { label: 'MCP & CLI', href: '/mcp', desc: 'Use Lumenfield in any agent', badge: 'New' },
+        { label: 'Premiere Pro', href: '/plugins/premiere', desc: 'AI tools inside Premiere', icon: 'PR', badge: 'New' },
+        { label: 'After Effects', href: '/plugins/after-effects', desc: 'Motion and VFX assistant', icon: 'AE', badge: 'New' },
+        { label: 'DaVinci Resolve', href: '/plugins/davinci', desc: 'Color and edit assistant', icon: 'DR', badge: 'New' },
+        { label: 'Figma', href: '/plugins/figma', desc: 'Design to video workflow', icon: 'FIG' },
+        { label: 'Photoshop', href: '/plugins/photoshop', desc: 'Real-time AI generation', icon: 'PS' },
+        { label: 'MCP & CLI', href: '/mcp', desc: 'Use Lumenfield in any agent', icon: 'CLI', badge: 'New' },
       ],
     },
   ],
 }
 
-// ── Main Nav Items ────────────────────────────────────────────
-const NAV_ITEMS = [
+const NAV_ITEMS: NavItem[] = [
   { label: 'Explore', href: '/', exact: true },
   { label: 'Image', href: '/generate?mode=image', menu: 'image', routes: ['/generate'] },
   { label: 'Video', href: '/generate?mode=video', menu: 'video', routes: ['/generate'] },
   { label: 'Audio', href: '/audio', menu: 'audio', routes: ['/audio'] },
+  { label: 'Supercomputer', href: '/supercomputer', badge: 'New' },
+  { label: 'MCP & CLI', href: '/mcp', badge: 'New' },
+  { label: 'Collab', href: '/projects' },
   { label: 'Plugins', href: '/plugins', menu: 'plugins', routes: ['/plugins'], badge: 'New' },
+  { label: 'Marketing', href: '/marketing-studio', routes: ['/marketing-studio'] },
 ]
-
-const STUDIO_LINKS = [
-  { label: 'Cinema Studio', href: '/generate', badge: 'New' },
-  { label: 'Marketing Studio', href: '/marketing' },
-  { label: 'AI Influencer', href: '/character?mode=influencer' },
-  { label: 'Storyboard', href: '/storyboard' },
-  { label: 'Apps', href: '/apps' },
-]
-
-// ── Helpers ──────────────────────────────────────────────────
-function LIcon({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 80 80" fill="currentColor">
-      <rect width="80" height="80" rx="16" fill="currentColor" />
-      <path d="M40 16L28 40h10l-6 24 20-28H38L40 16z" fill="#0f1113" opacity={0.9} />
-    </svg>
-  )
-}
 
 function SearchIcon() {
   return (
@@ -146,83 +188,125 @@ function ChevronDown({ size = 12 }: { size?: number }) {
   )
 }
 
-// ── Mega Menu Panel ───────────────────────────────────────────
+function LumenMark() {
+  return (
+    <span
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: 8,
+        background: '#f4f4f2',
+        color: '#0f1113',
+        display: 'grid',
+        placeItems: 'center',
+        fontWeight: 900,
+        fontSize: 16,
+        lineHeight: 1,
+        flexShrink: 0,
+      }}
+    >
+      LF
+    </span>
+  )
+}
+
 function MegaMenuPanel({ menu, onClose }: { menu: MegaMenu; onClose: () => void }) {
   return (
     <div
       className="absolute top-full left-0 mt-2 z-50 rounded-2xl border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
       style={{
-        background: 'rgba(19,21,23,0.98)',
+        background: 'rgba(25,27,29,0.99)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        minWidth: menu.sections.length > 1 ? 520 : 280,
+        width: menu.id === 'audio' ? 'min(92vw, 630px)' : 'min(92vw, 720px)',
+        maxHeight: 'calc(100vh - 76px)',
+        overflowY: 'auto',
       }}
     >
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${menu.sections.length}, 1fr)`,
-          gap: 0,
-          padding: '12px',
+          gridTemplateColumns: `repeat(${menu.sections.length}, minmax(0, 1fr))`,
+          gap: 24,
+          padding: 20,
         }}
       >
-        {menu.sections.map((section, si) => (
-          <div
-            key={si}
-            style={{
-              borderRight: si < menu.sections.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-              paddingRight: si < menu.sections.length - 1 ? '12px' : 0,
-              paddingLeft: si > 0 ? '12px' : 0,
-            }}
-          >
-            {section.title && (
-              <p
-                style={{
-                  color: 'rgba(255,255,255,0.28)',
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  letterSpacing: '0.8px',
-                  margin: '4px 8px 8px',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {section.title}
-              </p>
-            )}
-            {section.items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className="mega-link"
-                style={{ display: 'block' }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <strong style={{ color: 'white', fontSize: 15, fontWeight: 600 }}>
-                    {item.label}
-                  </strong>
-                  {item.badge && (
-                    <span
-                      style={{
-                        background: 'rgba(209,254,23,0.15)',
-                        borderRadius: 4,
-                        color: '#d1fe17',
-                        fontSize: 9,
-                        fontWeight: 800,
-                        padding: '1px 5px',
-                      }}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </span>
-                {item.desc && (
-                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, marginTop: 2, display: 'block' }}>
-                    {item.desc}
+        {menu.sections.map((section) => (
+          <div key={section.title}>
+            <p
+              style={{
+                color: 'rgba(255,255,255,0.35)',
+                fontSize: 13,
+                fontWeight: 500,
+                margin: '0 0 12px',
+              }}
+            >
+              {section.title}
+            </p>
+            <div style={{ display: 'grid', gap: 9 }}>
+              {section.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '48px minmax(0, 1fr)',
+                    alignItems: 'center',
+                    gap: 12,
+                    minHeight: 48,
+                    color: 'white',
+                    textDecoration: 'none',
+                    borderRadius: 13,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: 'relative',
+                      width: 48,
+                      height: 48,
+                      display: 'grid',
+                      placeItems: 'center',
+                      borderRadius: 10,
+                      background: '#202327',
+                      color: 'white',
+                      fontSize: 11,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {item.badge && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: -8,
+                          left: 5,
+                          padding: '1px 6px',
+                          borderRadius: 4,
+                          background: item.badge === 'Top' ? '#ff1c72' : '#d7ff1f',
+                          color: item.badge === 'Top' ? '#fff' : '#111',
+                          fontSize: 10,
+                          fontWeight: 950,
+                          transform: 'rotate(-5deg)',
+                        }}
+                      >
+                        {item.badge.toUpperCase()}
+                      </span>
+                    )}
+                    {item.icon}
                   </span>
-                )}
-              </Link>
-            ))}
+                  <span>
+                    <span style={{ display: 'block', fontSize: 14, fontWeight: 850, lineHeight: 1.1 }}>
+                      {item.label}
+                    </span>
+                    {item.desc && (
+                      <span style={{ display: 'block', marginTop: 6, color: 'rgba(255,255,255,0.42)', fontSize: 13, lineHeight: 1.2 }}>
+                        {item.desc}
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -230,14 +314,12 @@ function MegaMenuPanel({ menu, onClose }: { menu: MegaMenu; onClose: () => void 
   )
 }
 
-// ── Main Component ────────────────────────────────────────────
 export default function LumenNav() {
   const pathname = usePathname()
-  const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const [openMenu, setOpenMenu] = useState<MegaMenuId | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
 
-  // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
@@ -249,13 +331,6 @@ export default function LumenNav() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Close on route change
-  useEffect(() => {
-    setOpenMenu(null)
-    setSearchOpen(false)
-  }, [pathname])
-
-  // Keyboard shortcut Ctrl+K
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -271,22 +346,21 @@ export default function LumenNav() {
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
-  const menuMap: Record<string, MegaMenu> = {
+  const menuMap: Record<MegaMenuId, MegaMenu> = {
     image: IMAGE_MENU,
     video: VIDEO_MENU,
     audio: AUDIO_MENU,
     plugins: PLUGINS_MENU,
   }
 
-  const isActive = (item: typeof NAV_ITEMS[0]) => {
+  const isActive = (item: NavItem) => {
     if (item.exact) return pathname === item.href
-    if (item.routes) return item.routes.some((r) => pathname.startsWith(r))
+    if (item.routes) return item.routes.some((route) => pathname.startsWith(route))
     return pathname.startsWith(item.href)
   }
 
   return (
     <>
-      {/* ── Nav Bar ── */}
       <header
         style={{
           position: 'sticky',
@@ -313,10 +387,9 @@ export default function LumenNav() {
             position: 'relative',
           }}
         >
-          {/* ── Logo ── */}
           <Link
             href="/"
-            aria-label="Lumenfield home"
+            aria-label="Lumenfield AI Studio home"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -326,24 +399,7 @@ export default function LumenNav() {
               flexShrink: 0,
             }}
           >
-            <span
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: 'linear-gradient(135deg, #ff4da6, #e8006f 55%, #7c1dff)',
-                boxShadow: '0 0 20px rgba(232,0,111,0.34)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 900,
-                fontSize: 15,
-                flexShrink: 0,
-              }}
-            >
-              L
-            </span>
+            <LumenMark />
             <strong
               style={{
                 color: 'white',
@@ -352,11 +408,10 @@ export default function LumenNav() {
                 letterSpacing: '-0.5px',
               }}
             >
-              Lumen<span style={{ color: '#e8006f' }}>field</span>
+              Lumen<span style={{ color: '#d1fe17' }}>field</span>
             </strong>
           </Link>
 
-          {/* ── Center Nav Links ── */}
           <div
             style={{
               display: 'flex',
@@ -367,140 +422,108 @@ export default function LumenNav() {
             }}
             className="hide-scrollbar"
           >
-            {/* Explore */}
-            <Link
-              href="/"
-              style={{
-                borderRadius: 8,
-                color: pathname === '/' ? 'white' : 'rgba(255,255,255,0.52)',
-                fontSize: 15,
-                fontWeight: 500,
-                padding: '6px 10px',
-                whiteSpace: 'nowrap',
-                textDecoration: 'none',
-                background: pathname === '/' ? 'rgba(255,255,255,0.06)' : 'transparent',
-                transition: 'all 120ms ease',
-              }}
-            >
-              Explore
-            </Link>
-
-            {/* Separator */}
-            <span
-              style={{
-                width: 1,
-                height: 14,
-                background: 'rgba(255,255,255,0.12)',
-                flexShrink: 0,
-                margin: '0 2px',
-              }}
-            />
-
-            {/* Menus: Image / Video / Audio / Plugins */}
-            {NAV_ITEMS.slice(1).map((item) => (
-              <div key={item.label} style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  aria-haspopup="menu"
-                  aria-expanded={openMenu === item.menu}
-                  onClick={() => setOpenMenu(openMenu === item.menu ? null : item.menu!)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    borderRadius: 8,
-                    border: 'none',
-                    background: openMenu === item.menu ? 'rgba(255,255,255,0.08)' : 'transparent',
-                    color: isActive(item) ? 'white' : 'rgba(255,255,255,0.52)',
-                    cursor: 'pointer',
-                    fontSize: 15,
-                    fontWeight: 500,
-                    padding: '6px 10px',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 120ms ease',
-                  }}
-                >
-                  {item.label}
-                  {item.badge && (
-                    <span
+            {NAV_ITEMS.map((item, index) => (
+              <div key={item.label} style={{ position: 'relative', flexShrink: 0 }}>
+                {index === 1 && (
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: 1,
+                      height: 14,
+                      background: 'rgba(255,255,255,0.12)',
+                      display: 'inline-block',
+                      margin: '0 2px',
+                      verticalAlign: 'middle',
+                    }}
+                  />
+                )}
+                {item.menu ? (
+                  <>
+                    <button
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded={openMenu === item.menu}
+                      onClick={() => setOpenMenu(openMenu === item.menu ? null : item.menu ?? null)}
                       style={{
-                        background: 'rgba(209,254,23,0.15)',
-                        borderRadius: 4,
-                        color: '#d1fe17',
-                        fontSize: 9,
-                        fontWeight: 800,
-                        padding: '1px 5px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        borderRadius: 8,
+                        border: 'none',
+                        background: openMenu === item.menu ? 'rgba(255,255,255,0.08)' : 'transparent',
+                        color: openMenu === item.menu || isActive(item) ? '#d1fe17' : 'rgba(255,255,255,0.62)',
+                        cursor: 'pointer',
+                        fontSize: 15,
+                        fontWeight: 650,
+                        padding: '6px 10px',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 120ms ease',
                       }}
                     >
-                      {item.badge}
-                    </span>
-                  )}
-                  <ChevronDown />
-                </button>
-
-                {/* Mega menu dropdown */}
-                {openMenu === item.menu && item.menu && menuMap[item.menu] && (
-                  <MegaMenuPanel
-                    menu={menuMap[item.menu]}
-                    onClose={() => setOpenMenu(null)}
-                  />
+                      {item.label}
+                      {item.badge && (
+                        <span
+                          style={{
+                            background: '#d1fe17',
+                            borderRadius: 4,
+                            color: '#131517',
+                            fontSize: 9,
+                            fontWeight: 800,
+                            padding: '1px 5px',
+                          }}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                      <ChevronDown />
+                    </button>
+                    {openMenu === item.menu && (
+                      <MegaMenuPanel
+                        menu={menuMap[item.menu]}
+                        onClose={() => setOpenMenu(null)}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={item.href}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      borderRadius: 8,
+                      color: isActive(item) ? '#d1fe17' : 'rgba(255,255,255,0.62)',
+                      fontSize: 15,
+                      fontWeight: 650,
+                      padding: '6px 10px',
+                      whiteSpace: 'nowrap',
+                      textDecoration: 'none',
+                      background: isActive(item) ? 'rgba(255,255,255,0.06)' : 'transparent',
+                      transition: 'all 120ms ease',
+                    }}
+                  >
+                    {item.label}
+                    {item.badge && (
+                      <span
+                        style={{
+                          background: '#d1fe17',
+                          borderRadius: 4,
+                          color: '#131517',
+                          fontSize: 9,
+                          fontWeight: 800,
+                          padding: '1px 5px',
+                        }}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
                 )}
               </div>
             ))}
-
-            {/* Separator */}
-            <span
-              style={{
-                width: 1,
-                height: 14,
-                background: 'rgba(255,255,255,0.12)',
-                flexShrink: 0,
-                margin: '0 2px',
-              }}
-            />
-
-            {/* Studio direct links */}
-            {STUDIO_LINKS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  borderRadius: 8,
-                  color: pathname === item.href ? 'white' : 'rgba(255,255,255,0.52)',
-                  fontSize: 15,
-                  fontWeight: 500,
-                  padding: '6px 10px',
-                  whiteSpace: 'nowrap',
-                  textDecoration: 'none',
-                  background: pathname === item.href ? 'rgba(255,255,255,0.06)' : 'transparent',
-                  transition: 'all 120ms ease',
-                }}
-              >
-                {item.label}
-                {item.badge && (
-                  <span
-                    style={{
-                      background: 'rgba(209,254,23,0.15)',
-                      borderRadius: 4,
-                      color: '#d1fe17',
-                      fontSize: 9,
-                      fontWeight: 800,
-                      padding: '1px 5px',
-                    }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
           </div>
 
-          {/* ── Right Actions ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            {/* Search Button */}
             <button
               type="button"
               onClick={() => setSearchOpen((v) => !v)}
@@ -523,40 +546,16 @@ export default function LumenNav() {
             >
               <SearchIcon />
               <span className="hidden-mobile">Search</span>
-              <span
-                style={{
-                  display: 'flex',
-                  gap: 3,
-                  marginLeft: 4,
-                }}
-                className="hidden-mobile"
-              >
-                <kbd
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    borderRadius: 4,
-                    color: 'rgba(255,255,255,0.4)',
-                    fontSize: 11,
-                    padding: '1px 5px',
-                  }}
-                >
+              <span style={{ display: 'flex', gap: 3, marginLeft: 4 }} className="hidden-mobile">
+                <kbd style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 4, color: 'rgba(255,255,255,0.4)', fontSize: 11, padding: '1px 5px' }}>
                   Ctrl
                 </kbd>
-                <kbd
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    borderRadius: 4,
-                    color: 'rgba(255,255,255,0.4)',
-                    fontSize: 11,
-                    padding: '1px 5px',
-                  }}
-                >
+                <kbd style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 4, color: 'rgba(255,255,255,0.4)', fontSize: 11, padding: '1px 5px' }}>
                   K
                 </kbd>
               </span>
             </button>
 
-            {/* Library */}
             <Link
               href="/library"
               aria-label="Library"
@@ -583,7 +582,6 @@ export default function LumenNav() {
               Library
             </Link>
 
-            {/* Upgrade */}
             <Link
               href="/pricing"
               style={{
@@ -606,7 +604,6 @@ export default function LumenNav() {
               Upgrade
             </Link>
 
-            {/* Login */}
             <Link
               href="/sign-in"
               style={{
@@ -627,7 +624,6 @@ export default function LumenNav() {
               Log in
             </Link>
 
-            {/* Sign up */}
             <Link
               href="/sign-up"
               style={{
@@ -651,7 +647,6 @@ export default function LumenNav() {
         </nav>
       </header>
 
-      {/* ── Search Overlay ── */}
       {searchOpen && (
         <div
           style={{
@@ -680,7 +675,6 @@ export default function LumenNav() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Search input */}
             <div
               style={{
                 display: 'flex',
@@ -704,20 +698,11 @@ export default function LumenNav() {
                   outline: 'none',
                 }}
               />
-              <kbd
-                style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  borderRadius: 4,
-                  color: 'rgba(255,255,255,0.4)',
-                  fontSize: 11,
-                  padding: '2px 6px',
-                }}
-              >
+              <kbd style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 4, color: 'rgba(255,255,255,0.4)', fontSize: 11, padding: '2px 6px' }}>
                 ESC
               </kbd>
             </div>
 
-            {/* Quick links */}
             <div style={{ padding: '10px 4px' }}>
               <p
                 style={{
@@ -732,11 +717,11 @@ export default function LumenNav() {
                 Quick links
               </p>
               {[
-                { label: 'Generate Video', href: '/generate', icon: '🎬' },
-                { label: 'Generate Image', href: '/generate?mode=image', icon: '🖼️' },
-                { label: 'Pricing', href: '/pricing', icon: '💳' },
-                { label: 'Presets Library', href: '/presets', icon: '⚡' },
-                { label: 'Community', href: '/community', icon: '🌐' },
+                { label: 'Generate Video', href: '/generate?mode=video', icon: 'VID' },
+                { label: 'Generate Image', href: '/generate?mode=image', icon: 'IMG' },
+                { label: 'Pricing', href: '/pricing', icon: 'PRO' },
+                { label: 'Presets Library', href: '/presets', icon: 'PRE' },
+                { label: 'Community', href: '/community', icon: 'COM' },
               ].map((item) => (
                 <Link
                   key={item.href}
@@ -760,7 +745,7 @@ export default function LumenNav() {
                     e.currentTarget.style.background = 'transparent'
                   }}
                 >
-                  <span style={{ fontSize: 18 }}>{item.icon}</span>
+                  <span style={{ width: 28, color: '#d1fe17', fontSize: 11, fontWeight: 900 }}>{item.icon}</span>
                   {item.label}
                 </Link>
               ))}
@@ -769,7 +754,6 @@ export default function LumenNav() {
         </div>
       )}
 
-      {/* ── Mobile bottom nav ── */}
       <nav
         aria-label="mobile navigation"
         style={{
@@ -789,11 +773,11 @@ export default function LumenNav() {
         className="mobile-bottom-nav"
       >
         {[
-          { label: 'Home', href: '/', icon: '🏠' },
-          { label: 'Library', href: '/library', icon: '📁' },
-          { label: 'Generate', href: '/generate', icon: '✨', accent: true },
-          { label: 'Apps', href: '/apps', icon: '⚡' },
-          { label: 'Account', href: '/account', icon: '👤' },
+          { label: 'Home', href: '/', icon: 'HOME' },
+          { label: 'Library', href: '/library', icon: 'LIB' },
+          { label: 'Generate', href: '/generate', icon: 'GEN', accent: true },
+          { label: 'Apps', href: '/apps', icon: 'APP' },
+          { label: 'Account', href: '/account', icon: 'ME' },
         ].map((item) => (
           <Link
             key={item.href}
@@ -815,6 +799,7 @@ export default function LumenNav() {
                 style={{
                   background: '#d1fe17',
                   borderRadius: 12,
+                  color: '#131517',
                   display: 'grid',
                   height: 40,
                   placeItems: 'center',
@@ -823,14 +808,14 @@ export default function LumenNav() {
                   boxShadow: '0 0 20px rgba(209,254,23,0.3)',
                   position: 'relative',
                   bottom: 8,
+                  fontSize: 11,
+                  fontWeight: 900,
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#131517">
-                  <path d="M12 3l2 6h6l-5 4 2 6-5-4-5 4 2-6L4 9h6z" />
-                </svg>
+                {item.icon}
               </span>
             ) : (
-              <span style={{ fontSize: 20 }}>{item.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: 900 }}>{item.icon}</span>
             )}
             {item.label}
           </Link>
