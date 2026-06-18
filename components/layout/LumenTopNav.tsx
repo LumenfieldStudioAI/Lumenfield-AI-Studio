@@ -786,7 +786,7 @@ export default function LumenNav() {
           gridAutoColumns: '1fr',
           padding: '8px 0 12px',
         }}
-        className="mobile-only"
+        className="mobile-bottom-nav"
       >
         {[
           { label: 'Home', href: '/', icon: '🏠' },
@@ -839,11 +839,11 @@ export default function LumenNav() {
 
       <style>{`
         .hidden-mobile { display: flex; }
-        .mobile-only { display: none; }
+        .mobile-bottom-nav { display: none !important; }
 
         @media (max-width: 768px) {
           .hidden-mobile { display: none !important; }
-          .mobile-only { display: grid !important; }
+          .mobile-bottom-nav { display: grid !important; }
         }
 
         nav a:hover, nav button:hover {
