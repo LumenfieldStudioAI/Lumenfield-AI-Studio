@@ -69,23 +69,39 @@ export default function LumenTopNav() {
               style={styles.navWrap}
               onMouseEnter={() => setOpenMenu((item as { menu?: "image" | "video" | "audio" }).menu ?? null)}
             >
-              <Link href={item.href} style={styles.navLink}>
-                {item.label}
-                {(item as { badge?: string; badgeColor?: string }).badge && (
-                  <span style={{
-                    background: `${(item as { badgeColor?: string }).badgeColor ?? M}22`,
-                    color: (item as { badgeColor?: string }).badgeColor ?? M,
-                    borderRadius: 4,
-                    fontSize: 9,
-                    fontWeight: 800,
-                    padding: "1px 5px",
-                    marginLeft: 4,
-                    textTransform: "uppercase",
-                  }}>
-                    {(item as { badge?: string }).badge}
-                  </span>
-                )}
-              </Link>
+              {(item as { menu?: string }).menu ? (
+                <button
+                  style={{...styles.navLink, background: "none", border: "none", cursor: "pointer"}}
+                  onClick={() => setOpenMenu(openMenu === (item as { menu?: string }).menu as "image" | "video" | "audio" ? null : (item as { menu?: string }).menu as "image" | "video" | "audio")}
+                >
+                  {item.label}
+                  {(item as { badge?: string; badgeColor?: string }).badge && (
+                    <span style={{
+                      background: `${(item as { badgeColor?: string }).badgeColor ?? M}22`,
+                      color: (item as { badgeColor?: string }).badgeColor ?? M,
+                      borderRadius: 4, fontSize: 9, fontWeight: 800,
+                      padding: "1px 5px", marginLeft: 4, textTransform: "uppercase",
+                    }}>
+                      {(item as { badge?: string }).badge}
+                    </span>
+                  )}
+                  <span style={{ marginLeft: 3, fontSize: 9, color: "rgba(255,255,255,0.4)" }}>▾</span>
+                </button>
+              ) : (
+                <Link href={item.href} style={styles.navLink}>
+                  {item.label}
+                  {(item as { badge?: string; badgeColor?: string }).badge && (
+                    <span style={{
+                      background: `${(item as { badgeColor?: string }).badgeColor ?? M}22`,
+                      color: (item as { badgeColor?: string }).badgeColor ?? M,
+                      borderRadius: 4, fontSize: 9, fontWeight: 800,
+                      padding: "1px 5px", marginLeft: 4, textTransform: "uppercase",
+                    }}>
+                      {(item as { badge?: string }).badge}
+                    </span>
+                  )}
+                </Link>
+              )}
               {(item as { menu?: string }).menu && openMenu === (item as { menu?: string }).menu && (
                 <LumenMegaMenu kind={openMenu as "image" | "video" | "audio"} />
               )}
