@@ -235,8 +235,10 @@ function MegaMenuPanel({ menu, onClose }: { menu: MegaMenu; onClose: () => void 
                 href={item.href}
                 onClick={onClose}
                 style={{
-                  display: 'block',
-                  padding: '8px 10px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  padding: '7px 8px',
                   borderRadius: 10,
                   textDecoration: 'none',
                   transition: 'background 120ms',
@@ -244,15 +246,31 @@ function MegaMenuPanel({ menu, onClose }: { menu: MegaMenu; onClose: () => void 
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: item.desc ? 2 : 0 }}>
-                  <strong style={{ color: 'white', fontSize: 13, fontWeight: 600 }}>{item.label}</strong>
-                  {item.badge && <Badge label={item.badge} />}
-                </span>
-                {item.desc && (
-                  <span style={{ color: 'rgba(255,255,255,0.42)', fontSize: 12, display: 'block' }}>
-                    {item.desc}
+                <span style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 8,
+                  background: '#1b1d21',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 13,
+                  fontWeight: 900,
+                  color: 'white',
+                  flexShrink: 0,
+                }}>L</span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: item.desc ? 2 : 0 }}>
+                    <strong style={{ color: 'white', fontSize: 13, fontWeight: 600 }}>{item.label}</strong>
+                    {item.badge && <Badge label={item.badge} />}
                   </span>
-                )}
+                  {item.desc && (
+                    <span style={{ color: 'rgba(255,255,255,0.42)', fontSize: 12, display: 'block' }}>
+                      {item.desc}
+                    </span>
+                  )}
+                </span>
               </Link>
             ))}
           </div>
