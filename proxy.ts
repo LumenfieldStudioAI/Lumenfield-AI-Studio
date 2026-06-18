@@ -2,9 +2,20 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
-  "/neonforge-demo(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/pricing(.*)",
+  "/explore(.*)",
+  "/generate(.*)",
+  "/marketing(.*)",
+  "/audio(.*)",
+  "/apps(.*)",
+  "/canvas(.*)",
+  "/supercomputer(.*)",
+  "/mcp(.*)",
+  "/collab(.*)",
+  "/plugins(.*)",
+  "/character(.*)",
   "/api/webhook(.*)",
   "/api/stripe/webhook(.*)",
 ]);
