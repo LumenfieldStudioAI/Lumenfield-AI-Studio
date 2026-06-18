@@ -198,7 +198,7 @@ function MegaMenuPanel({ menu, onClose }: { menu: MegaMenu; onClose: () => void 
                 style={{ display: 'block' }}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <strong style={{ color: 'white', fontSize: 13, fontWeight: 600 }}>
+                  <strong style={{ color: 'white', fontSize: 15, fontWeight: 600 }}>
                     {item.label}
                   </strong>
                   {item.badge && (
@@ -305,7 +305,7 @@ export default function LumenNav() {
             display: 'grid',
             gridTemplateColumns: 'auto 1fr auto',
             alignItems: 'center',
-            height: 52,
+            height: 56,
             maxWidth: 1440,
             margin: '0 auto',
             padding: '0 16px',
@@ -338,7 +338,7 @@ export default function LumenNav() {
                 justifyContent: 'center',
                 color: 'white',
                 fontWeight: 900,
-                fontSize: 13,
+                fontSize: 15,
                 flexShrink: 0,
               }}
             >
@@ -347,7 +347,7 @@ export default function LumenNav() {
             <strong
               style={{
                 color: 'white',
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: 800,
                 letterSpacing: '-0.5px',
               }}
@@ -373,7 +373,7 @@ export default function LumenNav() {
               style={{
                 borderRadius: 8,
                 color: pathname === '/' ? 'white' : 'rgba(255,255,255,0.52)',
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: 500,
                 padding: '6px 10px',
                 whiteSpace: 'nowrap',
@@ -413,7 +413,7 @@ export default function LumenNav() {
                     background: openMenu === item.menu ? 'rgba(255,255,255,0.08)' : 'transparent',
                     color: isActive(item) ? 'white' : 'rgba(255,255,255,0.52)',
                     cursor: 'pointer',
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight: 500,
                     padding: '6px 10px',
                     whiteSpace: 'nowrap',
@@ -470,7 +470,7 @@ export default function LumenNav() {
                   gap: 4,
                   borderRadius: 8,
                   color: pathname === item.href ? 'white' : 'rgba(255,255,255,0.52)',
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: 500,
                   padding: '6px 10px',
                   whiteSpace: 'nowrap',
@@ -515,7 +515,7 @@ export default function LumenNav() {
                 backdropFilter: 'blur(12px)',
                 color: 'rgba(255,255,255,0.52)',
                 cursor: 'pointer',
-                fontSize: 13,
+                fontSize: 15,
                 height: 36,
                 padding: '0 10px',
                 transition: 'all 120ms ease',
@@ -569,7 +569,7 @@ export default function LumenNav() {
                 color: 'rgba(255,255,255,0.52)',
                 display: 'flex',
                 gap: 5,
-                fontSize: 13,
+                fontSize: 15,
                 height: 36,
                 padding: '0 10px',
                 textDecoration: 'none',
@@ -593,7 +593,7 @@ export default function LumenNav() {
                 borderRadius: 10,
                 color: '#d1fe17',
                 display: 'flex',
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: 700,
                 gap: 5,
                 height: 36,
@@ -614,7 +614,7 @@ export default function LumenNav() {
                 border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 10,
                 color: 'rgba(255,255,255,0.7)',
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: 500,
                 height: 36,
                 padding: '0 14px',
@@ -635,7 +635,7 @@ export default function LumenNav() {
                 border: 'none',
                 borderRadius: 10,
                 color: '#131517',
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: 700,
                 height: 36,
                 padding: '0 14px',
@@ -747,7 +747,7 @@ export default function LumenNav() {
                     borderRadius: 8,
                     color: 'white',
                     display: 'flex',
-                    fontSize: 14,
+                    fontSize: 16,
                     gap: 10,
                     padding: '8px 10px',
                     textDecoration: 'none',
