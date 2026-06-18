@@ -14,7 +14,7 @@
   --panel: rgba(255, 255, 255, 0.03);
   --panel-strong: rgba(255, 255, 255, 0.06);
   --accent: #e8006f;        /* Lumenfield magenta */
-  --accent-2: #d1fe17;      /* neon yellow — generate button */
+  --accent-2: #e8006f;      /* neon yellow — generate button */
   --accent-glow: rgba(232, 0, 111, 0.28);
   --accent-2-glow: rgba(209, 254, 23, 0.24);
 
@@ -27,11 +27,11 @@
   --color-surface-secondary: #23262a;
 
   /* ── Brand Colors ── */
-  --color-surface-brand:           #d1fe17;
+  --color-surface-brand:           #e8006f;
   --color-surface-brand-secondary: #ff005b;
-  --color-font-brand:              #d1fe17;
+  --color-font-brand:              #e8006f;
   --color-font-brand-secondary:    #ff005b;
-  --color-primary:                 #d1fe17;
+  --color-primary:                 #e8006f;
 
   /* ── Typography ── */
   --color-font-primary:   #ffffff;
@@ -48,13 +48,13 @@
   --color-font-warning:    #f3c977;
 
   /* ── Button Tokens ── */
-  --color-btn-accent-bg:   #d1fe17;
+  --color-btn-accent-bg:   #e8006f;
   --color-btn-accent-text: #131517;
   --color-btn-hover-surface: #23262a;
 
   /* ── Separator ── */
   --color-separator-card:  rgba(217, 217, 217, 0.04);
-  --color-separator-brand: #d1fe17;
+  --color-separator-brand: #e8006f;
 
   /* ── Neutral Scale ── */
   --color-neutral-surface:       #171717;
