@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import LumenNav from "@/components/layout/LumenTopNav";
-
 const siteTitle = "Lumenfield AI Studio";
 const siteDescription =
   "Lumenfield AI Studio is an AI creative studio for generating cinematic images, videos, ads, and visual content.";
@@ -52,7 +50,6 @@ export default function RootLayout({
             MozOsxFontSmoothing: "grayscale",
           }}
         >
-          <LumenNav />
           <main>{children}</main>
         </body>
       </html>
