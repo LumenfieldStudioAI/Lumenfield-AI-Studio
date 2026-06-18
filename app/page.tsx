@@ -1,4 +1,4 @@
-"use client";
+use client";
 import Link from "next/link";
 import { type ReactNode, useState, useEffect } from "react";
 
@@ -2223,4 +2223,8 @@ export default function Lumenfield() {
   return (
     <>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
- 
+      <Nav cur={page} go={setPage}/>
+      <main>{pages[page]}</main>
+    </>
+  );
+}
