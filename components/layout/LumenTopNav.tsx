@@ -446,10 +446,11 @@ export default function LumenNav() {
                     )}
                     <ChevronDown />
                   </button>
-                  {openMenu === id && (
-                    (id === 'image' || id === 'video' || id === 'audio')
-                      ? <LumenMegaMenu kind={id as 'image' | 'video' | 'audio'} />
-                      : <MegaMenuPanel menu={menuMap[id]} onClose={() => setOpenMenu(null)} />
+                  {openMenu === id && (id === 'image' || id === 'video' || id === 'audio') && (
+                    <LumenMegaMenu kind={id as 'image' | 'video' | 'audio'} />
+                  )}
+                  {openMenu === id && id === 'plugins' && (
+                    <MegaMenuPanel menu={menuMap[id]} onClose={() => setOpenMenu(null)} />
                   )}
                 </div>
               )
