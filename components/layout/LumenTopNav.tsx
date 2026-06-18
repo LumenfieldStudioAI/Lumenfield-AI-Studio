@@ -645,7 +645,7 @@ export default function LumenNav() {
                 transition: 'opacity 120ms ease',
               }}
             >
-              Start Free
+              Sign up
             </Link>
           </div>
         </nav>
