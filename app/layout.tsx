@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
+import LumenNav from "@/components/layout/LumenTopNav";
 
 const siteTitle = "Lumenfield AI Studio";
-const siteDescription = "Lumenfield AI Studio is an AI creative studio for generating cinematic images, videos, ads, and visual content.";
+const siteDescription =
+  "Lumenfield AI Studio is an AI creative studio for generating cinematic images, videos, ads, and visual content.";
 
 export const metadata: Metadata = {
   applicationName: siteTitle,
   title: siteTitle,
   description: siteDescription,
-  keywords: ["Lumenfield AI Studio", "Lumenfield", "AI studio", "image generation", "video generation", "AI marketing"],
+  keywords: [
+    "Lumenfield AI Studio",
+    "Lumenfield",
+    "AI studio",
+    "image generation",
+    "video generation",
+    "AI marketing",
+  ],
   openGraph: {
     title: siteTitle,
     description: siteDescription,
@@ -31,12 +39,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body style={{ margin: 0, padding: 0, background: "#050505", color: "#fff" }}>
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body
+        style={{
+          margin: 0,
+          background: "#0f1113",
+          color: "#ffffff",
+          fontFamily: "Inter, Arial, Helvetica, sans-serif",
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+        }}
+      >
+        <LumenNav />
+        <main>{children}</main>
+      </body>
+    </html>
   );
 }
