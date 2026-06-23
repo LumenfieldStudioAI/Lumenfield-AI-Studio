@@ -13,10 +13,12 @@ export interface Model {
   supportsCharacter?: boolean;
   maxDuration?: number;
   aspectRatios?: string[];
+  /** fal.ai'ye gönderilecek varsayılan parametreler */
+  defaultParams?: Record<string, unknown>;
 }
 
 export const MODELS: Model[] = [
-  // IMAGE
+  // ─── IMAGE ──────────────────────────────────────────────
   {
     id: "fal-ai/flux/schnell",
     name: "FLUX Schnell",
@@ -26,6 +28,7 @@ export const MODELS: Model[] = [
     credits: 2,
     description: "Hızlı görsel üretimi",
     aspectRatios: ["1:1", "16:9", "9:16", "4:3", "3:4"],
+    defaultParams: { image_size: "landscape_16_9", num_inference_steps: 4 },
   },
   {
     id: "fal-ai/flux-pro/v1.1",
@@ -36,6 +39,7 @@ export const MODELS: Model[] = [
     credits: 6,
     description: "Yüksek kaliteli görsel üretimi",
     aspectRatios: ["1:1", "16:9", "9:16", "4:3", "3:4"],
+    defaultParams: { image_size: "landscape_16_9" },
   },
   {
     id: "fal-ai/seedream-v3",
@@ -46,8 +50,9 @@ export const MODELS: Model[] = [
     credits: 4,
     description: "Sinematik görsel üretimi",
     aspectRatios: ["1:1", "16:9", "9:16"],
+    defaultParams: { aspect_ratio: "16:9" },
   },
-  // VIDEO
+  // ─── VIDEO ──────────────────────────────────────────────
   {
     id: "fal-ai/kling-video/v1.6/pro/text-to-video",
     name: "Kling 3.0 Pro",
@@ -60,6 +65,7 @@ export const MODELS: Model[] = [
     supportsCharacter: true,
     maxDuration: 10,
     aspectRatios: ["16:9", "9:16", "1:1"],
+    defaultParams: { duration: "5", aspect_ratio: "16:9" },
   },
   {
     id: "fal-ai/kling-video/v1.6/pro/image-to-video",
@@ -72,6 +78,7 @@ export const MODELS: Model[] = [
     supportsStartFrame: true,
     maxDuration: 10,
     aspectRatios: ["16:9", "9:16"],
+    defaultParams: { duration: "5" },
   },
   {
     id: "fal-ai/fast-animatediff/text-to-video",
@@ -84,6 +91,7 @@ export const MODELS: Model[] = [
     supportsStartFrame: true,
     maxDuration: 15,
     aspectRatios: ["16:9", "9:16", "1:1"],
+    defaultParams: { motion_bucket_id: 127, fps: 24 },
   },
   {
     id: "fal-ai/runway-gen3a-turbo",
@@ -96,8 +104,9 @@ export const MODELS: Model[] = [
     supportsStartFrame: true,
     maxDuration: 10,
     aspectRatios: ["16:9", "9:16"],
+    defaultParams: { duration: 5 },
   },
-  // AUDIO
+  // ─── AUDIO ──────────────────────────────────────────────
   {
     id: "fal-ai/elevenlabs/tts",
     name: "ElevenLabs TTS",
@@ -106,6 +115,7 @@ export const MODELS: Model[] = [
     badge: "PRO",
     credits: 6,
     description: "Gerçekçi sesli konuşma üretimi",
+    defaultParams: { voice_id: "21m00Tcm4TlvDq8ikWAM" },
   },
   {
     id: "fal-ai/stable-audio",
@@ -115,39 +125,33 @@ export const MODELS: Model[] = [
     badge: null,
     credits: 4,
     description: "Müzik ve ses efekti üretimi",
+    defaultParams: { seconds_total: 10 },
   },
 ];
 
-// ─── Lookup helpers ─────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────
 
-/** ID'ye göre model bul */
 export function getModel(id: string): Model | undefined {
   return MODELS.find((m) => m.id === id);
 }
 
-/** Kategori bazlı filtre */
 export function getModelsByCategory(category: ModelCategory): Model[] {
   return MODELS.filter((m) => m.category === category);
 }
 
-/** Kredi maliyeti hesapla (params'a göre genişletilebilir) */
 export function computeCost(
   model: Model,
   params?: Record<string, unknown>
 ): number {
   let cost = model.credits;
-
-  // Uzun video ekstra maliyet
   if (model.category === "video" && params?.duration) {
-    const duration = Number(params.duration);
-    if (duration > 10) cost += 4;
-    else if (duration > 5) cost += 2;
+    const d = Number(params.duration);
+    if (d > 10) cost += 4;
+    else if (d > 5) cost += 2;
   }
-
   return cost;
 }
 
-/** ID → kredi maliyeti (legacy compat) */
 export function getCreditCost(modelId: string): number {
   return getModel(modelId)?.credits ?? 4;
 }
