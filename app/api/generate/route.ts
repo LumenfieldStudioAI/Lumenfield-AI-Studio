@@ -48,41 +48,29 @@ export async function POST(req: NextRequest) {
 
     if (model.provider === "elevenlabs") {
       return NextResponse.json(
-        {
-          error: "ElevenLabs is registered but not enabled yet",
-          cost,
-          model,
-        },
+        { error: "ElevenLabs is registered but not enabled yet", cost, model },
         { status: 501 },
       );
     }
 
     if (model.provider !== "fal") {
       return NextResponse.json(
-        {
-          error: `${model.provider} is registered but not enabled yet`,
-          cost,
-          model,
-        },
+        { error: `${model.provider} is registered but not enabled yet`, cost, model },
         { status: 501 },
       );
     }
 
     if (!process.env.FAL_KEY) {
       return NextResponse.json(
-        {
-          error: "FAL_KEY is not configured",
-          cost,
-          model,
-          input: { prompt: body.prompt, ...model.defaultParams, ...body.params },
-        },
+        { error: "FAL_KEY is not configured", cost, model },
         { status: 503 },
       );
     }
 
     fal.config({ credentials: process.env.FAL_KEY });
 
-    const result = (await fal.subscribe(model.endpoint, {
+    // model.id IS the fal.ai endpoint string (e.g. "fal-ai/flux/schnell")
+    const result = (await fal.subscribe(model.id, {
       input: { prompt: body.prompt, ...model.defaultParams, ...body.params },
     })) as FalOutput;
 
@@ -99,15 +87,14 @@ export async function POST(req: NextRequest) {
       url,
       cost,
       model: {
-        id: model.id,
-        label: model.name,
-        type: model.category,
+        id:       model.id,
+        label:    model.name,
+        type:     model.category,
         provider: model.provider,
       },
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : "Unknown error";
-
     return NextResponse.json(
       { error: "Generation failed", detail },
       { status: 500 },
