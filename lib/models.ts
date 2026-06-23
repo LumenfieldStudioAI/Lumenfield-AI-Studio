@@ -2,25 +2,25 @@ export type ModelCategory = "image" | "video" | "audio";
 export type ModelBadge = "NEW" | "HOT" | "4K" | "FAST" | "PRO" | null;
 
 export interface Model {
-  id: string;           // fal.ai endpoint
-  name: string;         // Görünen ad
-  provider: string;     // ByteDance, KlingAI, vb.
+  id: string;
+  name: string;
+  provider: string;
   category: ModelCategory;
   badge: ModelBadge;
-  credits: number;      // Üretim başına kredi maliyeti
+  credits: number;
   description: string;
-  supportsStartFrame?: boolean;  // Video: görsel ile başlatma
-  supportsCharacter?: boolean;   // Video: karakter seçimi
-  maxDuration?: number;          // Video: saniye cinsinden
+  supportsStartFrame?: boolean;
+  supportsCharacter?: boolean;
+  maxDuration?: number;
   aspectRatios?: string[];
 }
 
 export const MODELS: Model[] = [
-  // ─── IMAGE ────────────────────────────────────────────────
+  // IMAGE
   {
     id: "fal-ai/flux/schnell",
     name: "FLUX Schnell",
-    provider: "Black Forest Labs",
+    provider: "fal",
     category: "image",
     badge: "FAST",
     credits: 2,
@@ -30,7 +30,7 @@ export const MODELS: Model[] = [
   {
     id: "fal-ai/flux-pro/v1.1",
     name: "FLUX 1.1 Pro",
-    provider: "Black Forest Labs",
+    provider: "fal",
     category: "image",
     badge: "PRO",
     credits: 6,
@@ -40,29 +40,18 @@ export const MODELS: Model[] = [
   {
     id: "fal-ai/seedream-v3",
     name: "Seedream 4.5",
-    provider: "ByteDance",
+    provider: "fal",
     category: "image",
     badge: "NEW",
     credits: 4,
     description: "Sinematik görsel üretimi",
     aspectRatios: ["1:1", "16:9", "9:16"],
   },
-  {
-    id: "fal-ai/stable-diffusion-xl",
-    name: "SDXL",
-    provider: "Stability AI",
-    category: "image",
-    badge: null,
-    credits: 3,
-    description: "Stabil görsel üretimi",
-    aspectRatios: ["1:1", "16:9", "9:16"],
-  },
-
-  // ─── VIDEO ────────────────────────────────────────────────
+  // VIDEO
   {
     id: "fal-ai/kling-video/v1.6/pro/text-to-video",
     name: "Kling 3.0 Pro",
-    provider: "KlingAI",
+    provider: "fal",
     category: "video",
     badge: "HOT",
     credits: 12,
@@ -74,8 +63,8 @@ export const MODELS: Model[] = [
   },
   {
     id: "fal-ai/kling-video/v1.6/pro/image-to-video",
-    name: "Kling 3.0 Img→Vid",
-    provider: "KlingAI",
+    name: "Kling Img→Vid",
+    provider: "fal",
     category: "video",
     badge: "HOT",
     credits: 14,
@@ -87,7 +76,7 @@ export const MODELS: Model[] = [
   {
     id: "fal-ai/fast-animatediff/text-to-video",
     name: "Seedance 2.0",
-    provider: "ByteDance",
+    provider: "fal",
     category: "video",
     badge: "4K",
     credits: 10,
@@ -99,7 +88,7 @@ export const MODELS: Model[] = [
   {
     id: "fal-ai/runway-gen3a-turbo",
     name: "Runway Gen-4.5",
-    provider: "Runway",
+    provider: "fal",
     category: "video",
     badge: "NEW",
     credits: 15,
@@ -108,23 +97,11 @@ export const MODELS: Model[] = [
     maxDuration: 10,
     aspectRatios: ["16:9", "9:16"],
   },
-  {
-    id: "fal-ai/minimax/video-01",
-    name: "MiniMax Video",
-    provider: "MiniMax",
-    category: "video",
-    badge: null,
-    credits: 8,
-    description: "Hızlı video üretimi",
-    maxDuration: 6,
-    aspectRatios: ["16:9"],
-  },
-
-  // ─── AUDIO ────────────────────────────────────────────────
+  // AUDIO
   {
     id: "fal-ai/elevenlabs/tts",
     name: "ElevenLabs TTS",
-    provider: "ElevenLabs",
+    provider: "elevenlabs",
     category: "audio",
     badge: "PRO",
     credits: 6,
@@ -133,7 +110,7 @@ export const MODELS: Model[] = [
   {
     id: "fal-ai/stable-audio",
     name: "Stable Audio",
-    provider: "Stability AI",
+    provider: "fal",
     category: "audio",
     badge: null,
     credits: 4,
@@ -141,12 +118,38 @@ export const MODELS: Model[] = [
   },
 ];
 
-export function getModelsByCategory(category: ModelCategory) {
+// ─── Lookup helpers ─────────────────────────────────────────
+
+/** ID'ye göre model bul */
+export function getModel(id: string): Model | undefined {
+  return MODELS.find((m) => m.id === id);
+}
+
+/** Kategori bazlı filtre */
+export function getModelsByCategory(category: ModelCategory): Model[] {
   return MODELS.filter((m) => m.category === category);
 }
 
-export function getModelById(id: string) {
-  return MODELS.find((m) => m.id === id);
+/** Kredi maliyeti hesapla (params'a göre genişletilebilir) */
+export function computeCost(
+  model: Model,
+  params?: Record<string, unknown>
+): number {
+  let cost = model.credits;
+
+  // Uzun video ekstra maliyet
+  if (model.category === "video" && params?.duration) {
+    const duration = Number(params.duration);
+    if (duration > 10) cost += 4;
+    else if (duration > 5) cost += 2;
+  }
+
+  return cost;
+}
+
+/** ID → kredi maliyeti (legacy compat) */
+export function getCreditCost(modelId: string): number {
+  return getModel(modelId)?.credits ?? 4;
 }
 
 export const MODEL_COST_MAP = Object.fromEntries(
