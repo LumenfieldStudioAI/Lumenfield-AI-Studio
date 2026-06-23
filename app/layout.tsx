@@ -16,11 +16,6 @@ export const metadata: Metadata = {
   title: "Lumenfield AI Studio — Create with AI",
   description:
     "Generate stunning images, videos and audio with the best AI models — all in one studio.",
-  openGraph: {
-    title: "Lumenfield AI Studio",
-    description: "Generate images, videos and audio with AI",
-    siteName: "Lumenfield",
-  },
 };
 
 export default function RootLayout({
