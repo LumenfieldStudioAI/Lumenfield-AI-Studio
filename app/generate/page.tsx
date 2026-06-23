@@ -1,285 +1,348 @@
 "use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Image, Video, Mic, Upload, User, Clock, Maximize2, Loader2, RotateCcw } from "lucide-react";
+import { Navbar } from "@/components/layout/Navbar";
+import { ModelSelector } from "@/components/studio/ModelSelector";
+import { useGenerate } from "@/hooks/useGenerate";
+import { MODELS, type Model, type ModelCategory } from "@/lib/models";
+import { cn } from "@/lib/utils";
 
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+const DEFAULT_MODEL = MODELS.find((m) => m.id === "fal-ai/fast-animatediff/text-to-video")!;
 
-import { computeCost, getModel } from "@/lib/models";
-
-type StudioMode = "image" | "video";
-type MenuModel = {
-  badges?: string[];
-  desc?: string;
-  engine?: string;
-  id: string;
-  name: string;
-  tag?: "NEW" | "EXCLUSIVE" | "TOP";
-};
-
-const videoCinematic: MenuModel[] = [
-  { id: "cs35", name: "Cinema Studio 3.5", tag: "NEW", desc: "Camera selection, style presets and AI director", engine: "seedance-2" },
-  { id: "cs30", name: "Cinema Studio 3.0", desc: "Enhanced camera and speed ramp control", engine: "kling-3" },
-  { id: "cs25", name: "Cinema Studio 2.5", desc: "Camera movements with start frame", engine: "seedance-1-5-pro" },
+const MODE_TABS: { id: ModelCategory; label: string; icon: typeof Image }[] = [
+  { id: "image", label: "Görsel",  icon: Image },
+  { id: "video", label: "Video",   icon: Video },
+  { id: "audio", label: "Ses",     icon: Mic   },
 ];
 
-const videoFeatured: MenuModel[] = [
-  { id: "seedance-2", name: "Seedance 2.0", tag: "NEW", badges: ["720p", "4s-15s"] },
-  { id: "kling-3", name: "Kling 3.0", tag: "EXCLUSIVE", badges: ["4K", "3s-15s"] },
-  { id: "veo-3-1", name: "Google Veo 3.1", badges: ["Sound", "8s"] },
-  { id: "happyhorse", name: "HappyHorse", tag: "NEW", badges: ["1080p", "3s-15s"] },
-  { id: "grok-video", name: "Grok Imagine 1.5", badges: ["Audio", "Cinematic"] },
-  { id: "minimax-hailuo", name: "Minimax Hailuo 2.3", badges: ["Fast", "Dynamic"] },
-];
+const ASPECT_RATIOS = ["16:9", "9:16", "1:1", "4:3"];
+const DURATIONS     = [5, 10, 15];
 
-const imageFeatured: MenuModel[] = [
-  { id: "nano-banana-pro", name: "Nano Banana Pro", tag: "TOP", badges: ["4K"] },
-  { id: "flux-2", name: "FLUX.2", badges: ["HD"] },
-  { id: "gpt-image-2", name: "GPT Image 2", badges: ["4K"] },
-  { id: "seedream-5-lite", name: "Seedream 5.0 lite" },
-  { id: "recraft", name: "Recraft V4.1" },
-  { id: "grok-image", name: "Grok Imagine" },
-];
+export default function GeneratePage() {
+  const router = useRouter();
+  const { generate, reset, status, outputUrl, error, queuePosition, isLoading } = useGenerate();
 
-function GenerateStudio() {
-  const params = useSearchParams();
-  const view = params.get("view");
-  const urlModel = params.get("model");
-  const initialImageModel = imageFeatured.find((model) => model.id === urlModel);
-  const initialVideoModel = videoFeatured.find((model) => model.id === urlModel);
+  const [mode, setMode]               = useState<ModelCategory>("video");
+  const [selectedModel, setSelectedModel] = useState<Model>(DEFAULT_MODEL);
+  const [prompt, setPrompt]           = useState("");
+  const [aspectRatio, setAspectRatio] = useState("16:9");
+  const [duration, setDuration]       = useState(5);
 
-  const [mode, setMode] = useState<StudioMode>(initialImageModel ? "image" : "video");
-  const [selected, setSelected] = useState<MenuModel>(
-    initialImageModel ?? initialVideoModel ?? videoCinematic[0],
-  );
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [prompt, setPrompt] = useState("");
-  const [aspect, setAspect] = useState("16:9");
-  const [resolution, setResolution] = useState("1080p");
-  const [duration, setDuration] = useState(4);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ type: string; url: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const handleModelChange = (model: Model) => {
+    setSelectedModel(model);
+    setMode(model.category);
+  };
 
-  const engineId = selected.engine ?? selected.id;
-  const engineModel = getModel(engineId);
-  const cost = engineModel ? computeCost(engineModel, { duration }) : 8;
-  const groups = useMemo(
-    () =>
-      mode === "video"
-        ? [
-            { items: videoCinematic, title: "Cinematic models" },
-            { items: videoFeatured, title: "Featured models" },
-          ]
-        : [{ items: imageFeatured, title: "Featured models" }],
-    [mode],
-  );
+  const handleModeSwitch = (m: ModelCategory) => {
+    setMode(m);
+    const first = MODELS.find((model) => model.category === m);
+    if (first) setSelectedModel(first);
+  };
 
-  function switchMode(nextMode: StudioMode) {
-    setMode(nextMode);
-    setSelected(nextMode === "video" ? videoCinematic[0] : imageFeatured[0]);
-    setMenuOpen(false);
-  }
-
-  async function generate() {
-    if (!prompt.trim()) return;
-
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await fetch("/api/studio-generate", {
-        body: JSON.stringify({
-          modelId: engineId,
-          params: { aspect_ratio: aspect, duration, resolution },
-          prompt,
-        }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      const data = (await response.json()) as {
-        error?: string;
-        type?: string;
-        url?: string;
-      };
-
-      if (!response.ok || !data.url) {
-        setError(data.error ?? "Generation failed");
-        return;
-      }
-
-      setResult({ type: data.type ?? mode, url: data.url });
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Request failed");
-    } finally {
-      setLoading(false);
+  const handleGenerate = async () => {
+    if (!prompt.trim() || isLoading) return;
+    const result = await generate({
+      prompt,
+      model: selectedModel.id,
+      params: {
+        aspect_ratio: aspectRatio,
+        ...(mode === "video" && { duration }),
+      },
+    });
+    if (result?.requiresUpgrade) {
+      router.push("/pricing");
     }
-  }
+  };
 
   return (
-    <div className="cs-root">
-      <aside className="cs-side">
-        <div className="cs-brand">
-          <span>Cinema Studio</span>
-          <span>L</span>
-        </div>
-        <Link className={`cs-navitem ${!view ? "active" : ""}`} href="/generate">
-          <span className="cs-navicon">H</span> Home
-        </Link>
-        <Link className={`cs-navitem ${view === "elements" ? "active" : ""}`} href="/generate?view=elements">
-          <span className="cs-navicon">@</span> My Elements
-        </Link>
-        <Link className={`cs-navitem ${view === "favorites" ? "active" : ""}`} href="/generate?view=favorites">
-          <span className="cs-navicon">*</span> My Favorites
-        </Link>
-        <Link className="cs-navitem" href="/apps">
-          <span className="cs-navicon">A</span> Apps
-        </Link>
-        <div className="cs-seclabel">
-          <span>Projects</span>
-          <span>+</span>
-        </div>
-        <Link className="cs-navitem" href="/generate">
-          <span className="cs-navicon">+</span> New project
-        </Link>
-        <div className="cs-spacer" />
-        <Link className="cs-pricing" href="/#payments">
-          Pricing <span className="cs-off">30% OFF</span>
-        </Link>
-        <Link className="cs-navitem" href="/#auth">
-          <span className="cs-navicon">→</span> Log in
-        </Link>
-      </aside>
+    <div className="min-h-screen bg-[#0f1113] flex flex-col">
+      <Navbar />
 
-      <main className="cs-main">
-        <div className="cs-top">
-          <Link className="cs-login" href="/#auth">Login</Link>
-          <Link className="cs-signup" href="/#auth">Sign up</Link>
-        </div>
+      <div className="flex flex-1 pt-14 overflow-hidden h-screen">
+        {/* ─── Left sidebar ─── */}
+        <aside className="w-12 flex-shrink-0 border-r border-white/5 bg-[#0f1113] flex flex-col items-center py-4 gap-2">
+          {MODE_TABS.map(({ id, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => handleModeSwitch(id)}
+              className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                mode === id ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
+              )}
+            >
+              <Icon size={16} />
+            </button>
+          ))}
+        </aside>
 
-        {view === "elements" || view === "favorites" ? (
-          <div className="cs-empty">
-            <h1>{view === "elements" ? "My Elements" : "My Favorites"}</h1>
-            <p>
-              {view === "elements"
-                ? "Create reusable characters, places and props for future generations."
-                : "Save your best outputs here and reuse them as references."}
-            </p>
-            <Link href="/generate">Create new</Link>
-          </div>
-        ) : (
-          <>
-            {loading ? (
-              <div className="cs-loading">Generating...</div>
-            ) : result ? (
-              <div className="cs-result">
-                {result.type === "video" ? (
-                  <video autoPlay controls loop src={result.url} />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img alt="Generated result" src={result.url} />
+        {/* ─── Main area ─── */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Mode tabs */}
+          <div className="flex border-b border-white/5 bg-[#0f1113]">
+            {MODE_TABS.map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => handleModeSwitch(id)}
+                className={cn(
+                  "px-5 py-3 text-sm transition-colors border-b-2",
+                  mode === id
+                    ? "text-white border-[#e8006f]"
+                    : "text-white/40 border-transparent hover:text-white/70"
                 )}
-              </div>
-            ) : (
-              <div className="cs-hero">
-                <h1>
-                  YOUR FIRST PROJECT.
-                  <br />
-                  <span>THE IMPOSSIBLE.</span>
-                </h1>
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Canvas / output */}
+          <div className="flex-1 flex items-center justify-center bg-[#0c0d0e] relative overflow-hidden">
+            {status === "idle" && (
+              <div className="text-center text-white/20">
+                <div className="text-5xl mb-3">✦</div>
+                <div className="text-sm">Aşağıdan bir prompt gir</div>
               </div>
             )}
 
-            {error ? <div className="cs-error">{error}</div> : null}
-
-            <div className="cs-dock">
-              <div className="cs-modetoggle">
-                <button className={`cs-modebtn ${mode === "image" ? "active" : ""}`} onClick={() => switchMode("image")}>
-                  Image
-                </button>
-                <button className={`cs-modebtn ${mode === "video" ? "active" : ""}`} onClick={() => switchMode("video")}>
-                  Video
-                </button>
+            {isLoading && (
+              <div className="text-center">
+                <Loader2 size={36} className="animate-spin text-[#e8006f] mx-auto mb-4" />
+                <p className="text-white/50 text-sm">
+                  {status === "submitting"
+                    ? "Gönderiliyor..."
+                    : queuePosition != null
+                    ? `Sırada ${queuePosition}. sıra...`
+                    : "Üretiliyor..."}
+                </p>
               </div>
+            )}
 
-              <div className="cs-bar">
-                <input
-                  className="cs-prompt"
-                  onChange={(event) => setPrompt(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") generate();
-                  }}
-                  placeholder="Describe your shot..."
-                  value={prompt}
-                />
-                <div className="cs-controls">
-                  <button className="cs-pill model" onClick={() => setMenuOpen(!menuOpen)}>
-                    {selected.name} v
-                  </button>
-                  <button className="cs-pill" onClick={() => setAspect(aspect === "16:9" ? "9:16" : aspect === "9:16" ? "1:1" : "16:9")}>
-                    {aspect}
-                  </button>
-                  <button className="cs-pill" onClick={() => setResolution(resolution === "1080p" ? "4K" : resolution === "4K" ? "720p" : "1080p")}>
-                    {resolution}
-                  </button>
-                  {mode === "video" ? (
-                    <button className="cs-pill" onClick={() => setDuration(duration >= 15 ? 4 : duration + 1)}>
-                      {duration}s
-                    </button>
-                  ) : null}
-                  <button className="cs-gen" disabled={loading || !prompt.trim()} onClick={generate}>
-                    GENERATE <span>{cost} credits</span>
+            {status === "done" && outputUrl && (
+              <div className="relative max-w-3xl w-full p-4">
+                {mode === "video" ? (
+                  <video
+                    src={outputUrl}
+                    controls
+                    autoPlay
+                    loop
+                    className="w-full rounded-xl border border-white/10"
+                  />
+                ) : mode === "image" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={outputUrl}
+                    alt="Üretilen görsel"
+                    className="w-full rounded-xl border border-white/10"
+                  />
+                ) : (
+                  <audio src={outputUrl} controls className="w-full" />
+                )}
+                <div className="flex gap-2 mt-3">
+                  <a
+                    href={outputUrl}
+                    download
+                    className="flex-1 text-center py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-colors"
+                  >
+                    İndir
+                  </a>
+                  <button
+                    onClick={reset}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-colors"
+                  >
+                    <RotateCcw size={14} />
+                    Yeniden
                   </button>
                 </div>
+              </div>
+            )}
 
-                {menuOpen ? (
-                  <div className="cs-menu">
-                    {groups.map((group) => (
-                      <div key={group.title}>
-                        <p>{group.title}</p>
-                        {group.items.map((model) => (
-                          <button
-                            className={`cs-mrow ${selected.id === model.id ? "sel" : ""}`}
-                            key={model.id}
-                            onClick={() => {
-                              setSelected(model);
-                              setMenuOpen(false);
-                            }}
-                          >
-                            <span className="cs-mico">L</span>
-                            <span>
-                              <strong>
-                                {model.name}
-                                {model.tag ? <em>{model.tag}</em> : null}
-                              </strong>
-                              {model.desc ? <small>{model.desc}</small> : null}
-                              {model.badges ? (
-                                <span className="cs-specs">
-                                  {model.badges.map((badge) => (
-                                    <small key={badge}>{badge}</small>
-                                  ))}
-                                </span>
-                              ) : null}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
+            {status === "error" && (
+              <div className="text-center">
+                <div className="text-red-400 text-sm mb-3">{error}</div>
+                <button
+                  onClick={reset}
+                  className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white/70"
+                >
+                  Tekrar dene
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ─── Composer bar ─── */}
+          <div className="border-t border-white/5 bg-[#0f1113] p-4">
+            {/* Prompt */}
+            <div className="relative mb-3">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && e.metaKey) handleGenerate(); }}
+                placeholder={
+                  mode === "image"
+                    ? "Görseli tanımla... (Ör: Gün batımında İstanbul silueti, sinematik)"
+                    : mode === "video"
+                    ? "Video sahnesini tanımla... (Ör: Yavaş çekim okyanus dalgaları)"
+                    : "Seslendirmek istediğin metni yaz..."
+                }
+                rows={2}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-28 text-sm text-white placeholder:text-white/25 resize-none focus:outline-none focus:border-[#e8006f]/50 transition-colors"
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={!prompt.trim() || isLoading}
+                className={cn(
+                  "absolute right-3 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all",
+                  prompt.trim() && !isLoading
+                    ? "bg-[#e8006f] hover:bg-[#c4005e] text-white"
+                    : "bg-white/5 text-white/20 cursor-not-allowed"
+                )}
+              >
+                {isLoading ? <Loader2 size={14} className="animate-spin" /> : "↑ Üret"}
+              </button>
+            </div>
+
+            {/* Toolbar */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <ModelSelector
+                value={selectedModel.id}
+                onChange={handleModelChange}
+                category={mode}
+              />
+
+              <div className="w-px h-5 bg-white/10" />
+
+              {/* Aspect ratio */}
+              <div className="flex gap-1">
+                {ASPECT_RATIOS.map((ar) => (
+                  <button
+                    key={ar}
+                    onClick={() => setAspectRatio(ar)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-md text-xs transition-colors",
+                      aspectRatio === ar
+                        ? "bg-white/15 text-white"
+                        : "text-white/30 hover:text-white/60 hover:bg-white/5"
+                    )}
+                  >
+                    {ar}
+                  </button>
+                ))}
+              </div>
+
+              {/* Video-only controls */}
+              {mode === "video" && (
+                <>
+                  <div className="w-px h-5 bg-white/10" />
+
+                  {/* Duration */}
+                  <div className="flex gap-1">
+                    {DURATIONS.map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setDuration(d)}
+                        className={cn(
+                          "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs transition-colors",
+                          duration === d
+                            ? "bg-white/15 text-white"
+                            : "text-white/30 hover:text-white/60 hover:bg-white/5"
+                        )}
+                      >
+                        <Clock size={11} />
+                        {d}s
+                      </button>
                     ))}
                   </div>
-                ) : null}
+
+                  {/* Start Frame (sadece destekleyen modellerde) */}
+                  {selectedModel.supportsStartFrame && (
+                    <button className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs text-white/40 hover:text-white/70 hover:bg-white/5 border border-white/10 transition-colors">
+                      <Upload size={12} />
+                      Start Frame
+                    </button>
+                  )}
+
+                  {/* Character */}
+                  {selectedModel.supportsCharacter && (
+                    <button className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs text-white/40 hover:text-white/70 hover:bg-white/5 border border-white/10 transition-colors">
+                      <User size={12} />
+                      Karakter
+                    </button>
+                  )}
+
+                  <button className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs text-white/40 hover:text-white/70 hover:bg-white/5 border border-white/10 transition-colors ml-auto">
+                    <Maximize2 size={12} />
+                    {selectedModel.credits} kredi
+                  </button>
+                </>
+              )}
+
+              {mode === "image" && (
+                <span className="ml-auto text-xs text-white/25">
+                  {selectedModel.credits} kredi
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ─── Right panel ─── */}
+        <aside className="w-56 flex-shrink-0 border-l border-white/5 bg-[#0f1113] p-4 flex flex-col gap-4 overflow-y-auto">
+          <div>
+            <h3 className="text-[10px] text-white/30 uppercase tracking-widest mb-3">Ayarlar</h3>
+            <div className="space-y-3">
+              {mode === "video" && (
+                <div>
+                  <label className="text-xs text-white/40 mb-1.5 block flex justify-between">
+                    Süre
+                    <span className="text-white/70">{duration}s</span>
+                  </label>
+                  <input
+                    type="range" min={5} max={15} step={5}
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    className="w-full accent-[#e8006f]"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="text-xs text-white/40 mb-1.5 block">En-Boy Oranı</label>
+                <div className="grid grid-cols-2 gap-1">
+                  {ASPECT_RATIOS.map((ar) => (
+                    <button
+                      key={ar}
+                      onClick={() => setAspectRatio(ar)}
+                      className={cn(
+                        "py-1.5 rounded-md text-xs transition-colors",
+                        aspectRatio === ar
+                          ? "bg-[#e8006f]/20 text-[#e8006f] border border-[#e8006f]/30"
+                          : "bg-white/5 text-white/40 hover:bg-white/10"
+                      )}
+                    >
+                      {ar}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </>
-        )}
-      </main>
-    </div>
-  );
-}
+          </div>
 
-export default function GeneratePage() {
-  return (
-    <Suspense fallback={<div className="cs-root">Loading...</div>}>
-      <GenerateStudio />
-    </Suspense>
+          <div className="border-t border-white/5 pt-4">
+            <h3 className="text-[10px] text-white/30 uppercase tracking-widest mb-2">Model</h3>
+            <div className="text-xs text-white/60 font-medium">{selectedModel.name}</div>
+            <div className="text-[11px] text-white/30 mt-0.5">{selectedModel.provider}</div>
+            <div className="mt-2 text-xs text-white/40">
+              Maliyet:{" "}
+              <span className="text-white/70">{selectedModel.credits} kredi</span>
+            </div>
+            {selectedModel.description && (
+              <div className="mt-2 text-[11px] text-white/25 leading-relaxed">
+                {selectedModel.description}
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
   );
 }

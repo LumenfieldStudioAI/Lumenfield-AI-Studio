@@ -1,59 +1,40 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
-import LumenNav from "@/components/layout/LumenTopNav";
+import "./globals.css";
 
-const siteTitle = "Lumenfield AI Studio";
-const siteDescription =
-  "Lumenfield AI Studio is an AI creative studio for generating cinematic images, videos, ads, and visual content.";
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
-  applicationName: siteTitle,
-  title: siteTitle,
-  description: siteDescription,
-  keywords: [
-    "Lumenfield AI Studio",
-    "Lumenfield",
-    "AI studio",
-    "image generation",
-    "video generation",
-    "AI marketing",
-  ],
+  title: "Lumenfield AI Studio — Create with AI",
+  description:
+    "Generate stunning images, videos and audio with the best AI models — all in one studio.",
   openGraph: {
-    title: siteTitle,
-    description: siteDescription,
-    siteName: siteTitle,
-    type: "website",
+    title: "Lumenfield AI Studio",
+    description: "Generate images, videos and audio with AI",
+    siteName: "Lumenfield",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: siteTitle,
-    description: siteDescription,
-  },
-  creator: siteTitle,
-  publisher: siteTitle,
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" className="dark">
         <body
-          style={{
-            margin: 0,
-            background: "#0f1113",
-            color: "#ffffff",
-            fontFamily: "Inter, Arial, Helvetica, sans-serif",
-            WebkitFontSmoothing: "antialiased",
-            MozOsxFontSmoothing: "grayscale",
-          }}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0f1113] text-white min-h-screen`}
         >
-          <LumenNav />
-          <main>{children}</main>
+          {children}
         </body>
       </html>
     </ClerkProvider>
