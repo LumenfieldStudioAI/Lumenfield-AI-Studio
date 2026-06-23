@@ -7,8 +7,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.cloudflare.com" },
       { protocol: "https", hostname: "fal.media" },
       { protocol: "https", hostname: "**.fal.ai" },
-      { protocol: "https", hostname: "cdn.higgsfield.ai" },
+      { protocol: "https", hostname: "v3.fal.media" },
+      { protocol: "https", hostname: "storage.googleapis.com" },
     ],
+  },
+  // Belirli modülleri yalnızca sunucu tarafında çalıştır
+  experimental: {
+    serverComponentsExternalPackages: ["@aws-sdk/client-s3"],
   },
 };
 
